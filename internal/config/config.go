@@ -1,8 +1,9 @@
 package config
 
 type Config struct {
-	Gateway Gateway         `yaml:"gateway"`
-	Hosts   map[string]Host `yaml:"hosts"`
+	Gateway   Gateway         `yaml:"gateway"`
+	Hosts     map[string]Host `yaml:"hosts"`
+	Broadcast string          `yaml:"broadcast"`
 }
 
 type Gateway struct {

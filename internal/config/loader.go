@@ -12,7 +12,10 @@ func Load(path string) (*Config, error) {
 		return nil, err
 	}
 
-	var cfg Config
+	// Default values here
+	cfg := Config{
+		Broadcast: "255.255.255.255",
+	}
 
 	err = yaml.Unmarshal(data, &cfg)
 	if err != nil {
