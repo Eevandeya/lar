@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var cfg *config.Config
+var cfg *config.ClientConfig
 
 var RootCmd = &cobra.Command{
 	Use:     "lar",
@@ -23,13 +23,13 @@ var RootCmd = &cobra.Command{
 		}
 
 		if configPath == "" {
-			configPath, err = config.LocateConfig()
+			configPath, err = config.LocateClientConfig()
 			if err != nil {
 				return err
 			}
 		}
 
-		cfg, err = config.Load(configPath)
+		cfg, err = config.LoadClient(configPath)
 		if err != nil {
 			return err
 		}

@@ -23,7 +23,7 @@ func fileExists(path string) (bool, error) {
 	}
 }
 
-func LocateConfig() (string, error) {
+func LocateClientConfig() (string, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
