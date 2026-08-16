@@ -4,6 +4,7 @@ import (
 	"log/slog"
 
 	"github.com/eevandeya/lar/internal/config"
+	"github.com/eevandeya/lar/internal/version"
 	"github.com/spf13/cobra"
 )
 
@@ -13,17 +14,12 @@ var debug bool
 var RootCmd = &cobra.Command{
 	Use:           "lar [command]",
 	Short:         "CLI for managing your machines through a gateway.",
-	Version:       "0.0.1",
+	Version:       version.Version,
 	Long:          "Manage your machines through a gateway.",
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		configureLogging(debug)
-
-		if cmd.CommandPath() == "lar version" {
-			// TODO: version
-			return nil
-		}
 
 		slog.Debug("resolving config")
 		configPath, err := cmd.Flags().GetString("config")
