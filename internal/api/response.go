@@ -4,6 +4,10 @@ type StatusResponse struct {
 	Online bool `json:"online"`
 }
 
+type WakeResponse struct {
+	Sent bool `json:"sent"`
+}
+
 type ErrorResponse struct {
 	Error *Error `json:"error"`
 }

@@ -25,6 +25,7 @@ func NewServer(cfg *config.GatewayConfig) *Server {
 		mux: http.NewServeMux(),
 	}
 	s.mux.HandleFunc("GET /status", s.statusHandler)
+	s.mux.HandleFunc("POST /wake", s.wakeHandler)
 	return &s
 }
 

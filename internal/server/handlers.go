@@ -9,6 +9,7 @@ import (
 
 	"github.com/eevandeya/lar/internal/api"
 	"github.com/eevandeya/lar/internal/arp"
+	"github.com/eevandeya/lar/internal/wol"
 )
 
 func (s *Server) writeError(w http.ResponseWriter, statusCode int, code api.ErrorCode, message string) error {
@@ -44,7 +45,6 @@ func (s *Server) statusHandler(w http.ResponseWriter, r *http.Request) {
 		if err := s.writeError(w, http.StatusUnauthorized, api.ErrUnauthorized, "invalid credentials"); err != nil {
 			slog.Error("failed to write error response", "err", err)
 		}
-
 		return
 	}
 
@@ -85,6 +85,55 @@ func (s *Server) statusHandler(w http.ResponseWriter, r *http.Request) {
 
 	response := api.StatusResponse{Online: online}
 
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(response)
+
+	if err != nil {
+		slog.Error("failed to write error response", "err", err)
+		return
+	}
+
+	return
+}
+
+func (s *Server) wakeHandler(w http.ResponseWriter, r *http.Request) {
+	if !s.checkAuth(r) {
+		if err := s.writeError(w, http.StatusUnauthorized, api.ErrUnauthorized, "invalid credentials"); err != nil {
+			slog.Error("failed to write error response", "err", err)
+		}
+		return
+	}
+
+	queryParams := r.URL.Query()
+	hostName := queryParams.Get("host")
+
+	if hostName == "" {
+		if err := s.writeError(w, http.StatusBadRequest, api.ErrMissingHostName, "missing host name query param"); err != nil {
+			slog.Error("failed to write error response", "err", err)
+		}
+		return
+	}
+
+	host, ok := s.cfg.Hosts[hostName]
+	if !ok {
+		if err := s.writeError(w, http.StatusBadRequest, api.ErrInvalidHostName, "invalid host name"); err != nil {
+			slog.Error("failed to write error response", "err", err)
+		}
+		return
+	}
+
+	err := wol.Wake(net.HardwareAddr(host.MAC), net.IP(s.cfg.Broadcast))
+	if err != nil {
+		slog.Error("Wake On Lan failed", "err", err)
+		if err = s.writeError(w, http.StatusInternalServerError, api.ErrWOLFailed, "wake on lan has failed"); err != nil {
+			slog.Error("failed to write error response", "err", err)
+		}
+		return
+	}
+
+	response := api.WakeResponse{Sent: true}
+
+	w.WriteHeader(http.StatusAccepted)
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(response)
 

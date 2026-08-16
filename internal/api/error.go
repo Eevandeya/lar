@@ -8,4 +8,5 @@ const (
 	ErrInvalidHostName      ErrorCode = "invalid_host_name"
 	ErrInterfaceUnavailable ErrorCode = "interface_unavailable"
 	ErrARPProbingFailed     ErrorCode = "arp_probing_failed"
+	ErrWOLFailed            ErrorCode = "wol_failed"
 )
