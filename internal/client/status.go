@@ -2,6 +2,7 @@ package client
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 
 	"github.com/eevandeya/lar/internal/api"
@@ -18,9 +19,25 @@ func (c *Client) Status(host string) (bool, error) {
 	req.URL.RawQuery = q.Encode()
 	c.setAuthHeader(req)
 
+	slog.Debug("sending request to the gateway", "method", req.Method, "url", req.URL)
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return false, err
+	}
+
+	if resp.StatusCode >= 400 {
+		var errorResponse api.ErrorResponse
+		if err = json.NewDecoder(resp.Body).Decode(&errorResponse); err != nil {
+			return false, err
+		}
+		return false, &HostError{
+			HostName: host,
+			Err: APIError{
+				StatusCode: resp.StatusCode,
+				Code:       errorResponse.Error.Code,
+				Message:    errorResponse.Error.Message,
+			},
+		}
 	}
 
 	var response api.StatusResponse

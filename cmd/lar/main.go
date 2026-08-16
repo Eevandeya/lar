@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/eevandeya/lar/internal/cli"
@@ -9,7 +8,6 @@ import (
 
 func main() {
 	if err := cli.RootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		os.Exit(cli.HandleError(err))
 	}
 }

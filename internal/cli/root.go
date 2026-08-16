@@ -1,36 +1,52 @@
 package cli
 
 import (
+	"log/slog"
+
 	"github.com/eevandeya/lar/internal/config"
 	"github.com/spf13/cobra"
 )
 
 var cfg *config.ClientConfig
+var debug bool
 
 var RootCmd = &cobra.Command{
-	Use:     "lar",
-	Short:   "CLI to manage your machines through gateway.",
-	Version: "0.0.1",
-	Long:    "Booger Aids.",
+	Use:           "lar",
+	Short:         "CLI to manage your machines through gateway.",
+	Version:       "0.0.1",
+	Long:          "Booger Aids.",
+	SilenceUsage:  true,
+	SilenceErrors: true,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		configureLogging(debug)
+
 		if cmd.CommandPath() == "lar version" {
+			// TODO: version
 			return nil
 		}
 
+		slog.Debug("resolving config")
 		configPath, err := cmd.Flags().GetString("config")
 		if err != nil {
+			slog.Debug("could not get --config flag data", "err", err)
 			return err
 		}
 
 		if configPath == "" {
+			slog.Debug("no config via --config flag, checking default config paths")
 			configPath, err = config.LocateClientConfig()
 			if err != nil {
+				slog.Debug("could not resolve config", "err", err)
 				return err
 			}
+		} else {
+			slog.Debug("using config path from --config flag", "path", configPath)
 		}
 
+		slog.Debug("loading config", "path", configPath)
 		cfg, err = config.LoadClient(configPath)
 		if err != nil {
+			slog.Debug("could not load config", "err", err)
 			return err
 		}
 
@@ -40,6 +56,7 @@ var RootCmd = &cobra.Command{
 
 func init() {
 	RootCmd.PersistentFlags().String("config", "", "specify lar config path")
+	RootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "enable debug output")
 
 	RootCmd.AddCommand(wakeCmd)
 	RootCmd.AddCommand(shutDownCmd)
