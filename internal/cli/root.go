@@ -56,9 +56,11 @@ var RootCmd = &cobra.Command{
 
 func init() {
 	RootCmd.PersistentFlags().String("config", "", "specify lar config path")
-	RootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "enable debug output")
+	RootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "enable debug output")
 
 	RootCmd.AddCommand(wakeCmd)
 	RootCmd.AddCommand(shutDownCmd)
+
+	statusCmd.Flags().BoolP("quiet", "q", false, "suppress output")
 	RootCmd.AddCommand(statusCmd)
 }

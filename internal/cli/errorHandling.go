@@ -26,6 +26,7 @@ func HandleError(err error) int {
 	var apiErr client.APIError
 	var netErr net.Error
 	var argErr *ArgumentNumberError
+	var codeErr ExitCodeError
 
 	switch {
 	case errors.As(err, &apiErr):
@@ -67,6 +68,9 @@ func HandleError(err error) int {
 
 	case errors.Is(err, config.ErrNoConfig):
 		_, _ = fmt.Fprintf(os.Stderr, "%sError:%s config was not found or passed through --config\n", red, reset)
+
+	case errors.As(err, &codeErr):
+		return int(codeErr)
 
 	default:
 		_, _ = fmt.Fprintf(os.Stderr, "%sError:%s an unexpected error occurred\n", red, reset)

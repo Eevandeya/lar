@@ -19,3 +19,9 @@ func (e *ArgumentNumberError) Error() string {
 		e.Got,
 	)
 }
+
+type ExitCodeError int
+
+func (e ExitCodeError) Error() string {
+	return ""
+}

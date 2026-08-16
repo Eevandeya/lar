@@ -37,6 +37,19 @@ var statusCmd = &cobra.Command{
 			return err
 		}
 
+		quiet, err := cmd.Flags().GetBool("quiet")
+		if err != nil {
+			slog.Debug("failed to read --quiet flag", "err", err)
+			return err
+		}
+
+		if quiet && online {
+			return ExitCodeError(0)
+		}
+		if quiet && !online {
+			return ExitCodeError(1)
+		}
+
 		if online {
 			fmt.Printf("%s: %sonline%s\n", hostName, green, reset)
 		} else {
