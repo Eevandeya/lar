@@ -5,6 +5,7 @@ type GatewayConfig struct {
 	Broadcast     IP              `yaml:"broadcast"`
 	Secret        string          `yaml:"secret"`
 	InterfaceName string          `yaml:"interface"`
+	Port          uint16          `yaml:"port"`
 }
 
 type Host struct {

@@ -14,9 +14,9 @@ func LoadGateway(path string) (*GatewayConfig, error) {
 	}
 
 	// Default values here
-	defaultBroadcast := IP(net.ParseIP("255.255.255.255"))
 	cfg := GatewayConfig{
-		Broadcast: defaultBroadcast,
+		Broadcast: IP(net.ParseIP("255.255.255.255")),
+		Port:      8080,
 	}
 
 	err = yaml.Unmarshal(data, &cfg)

@@ -1,10 +1,17 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/eevandeya/lar/internal/config"
+)
+
+const (
+	readTimeout    = 10 * time.Second
+	writeTimeout   = 10 * time.Second
+	maxHeaderBytes = 1 << 20
 )
 
 type Server struct {
@@ -21,13 +28,13 @@ func NewServer(cfg *config.GatewayConfig) *Server {
 	return &s
 }
 
-func (s *Server) ListenAndServer() error {
+func (s *Server) ListenAndServer(port uint16) error {
 	server := &http.Server{
-		Addr:           ":8080",
-		Handler:        s.mux,
-		ReadTimeout:    10 * time.Second,
-		WriteTimeout:   10 * time.Second,
-		MaxHeaderBytes: 1 << 20,
+		Addr:           fmt.Sprintf(":%d", port),
+		Handler:        loggingMiddleware(s.mux),
+		ReadTimeout:    readTimeout,
+		WriteTimeout:   writeTimeout,
+		MaxHeaderBytes: maxHeaderBytes,
 	}
 
 	return server.ListenAndServe()
