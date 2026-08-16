@@ -11,10 +11,10 @@ var cfg *config.ClientConfig
 var debug bool
 
 var RootCmd = &cobra.Command{
-	Use:           "lar",
-	Short:         "CLI to manage your machines through gateway.",
+	Use:           "lar [command]",
+	Short:         "CLI for managing your machines through a gateway.",
 	Version:       "0.0.1",
-	Long:          "Booger Aids.",
+	Long:          "Manage your machines through a gateway.",
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {

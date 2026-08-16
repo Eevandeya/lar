@@ -8,16 +8,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const StatusCommand Command = "status"
-
 var statusCmd = &cobra.Command{
 	Use:   "status [host]",
-	Short: "Lol",
+	Short: "Check host status",
+	Long:  "Check whether a host is online.",
 	Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) != 1 {
 			return &ArgumentNumberError{
-				Command:  StatusCommand,
-				Usage:    cmd.UsageString(),
 				Expected: 1,
 				Got:      len(args),
 			}
