@@ -50,7 +50,9 @@ func HandleError(cmd *cobra.Command, err error) int {
 		case api.ErrInterfaceUnavailable:
 			_, _ = fmt.Fprintf(os.Stderr, "%s network interface on gateway is unavailable\n", errorPrefix)
 		case api.ErrARPProbingFailed:
-			_, _ = fmt.Fprintf(os.Stderr, "%s failed to check host status\n", errorPrefix)
+			_, _ = fmt.Fprintf(os.Stderr, "%s gateway failed to check host status\n", errorPrefix)
+		case api.ErrWOLFailed:
+			_, _ = fmt.Fprintf(os.Stderr, "%s gateway failed to send magic packet\n", errorPrefix)
 		default:
 			_, _ = fmt.Fprintf(os.Stderr, "%s %s\n", errorPrefix, apiErr.Message)
 		}

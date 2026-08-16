@@ -124,8 +124,8 @@ func (s *Server) wakeHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := wol.Wake(net.HardwareAddr(host.MAC), net.IP(s.cfg.Broadcast))
 	if err != nil {
-		slog.Error("Wake On Lan failed", "err", err)
-		if err = s.writeError(w, http.StatusInternalServerError, api.ErrWOLFailed, "wake on lan has failed"); err != nil {
+		slog.Error("Wake-on-Lan failed", "err", err)
+		if err = s.writeError(w, http.StatusInternalServerError, api.ErrWOLFailed, "wake-on-lan has failed"); err != nil {
 			slog.Error("failed to write error response", "err", err)
 		}
 		return

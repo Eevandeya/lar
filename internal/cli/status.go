@@ -30,7 +30,7 @@ var statusCmd = &cobra.Command{
 		slog.Debug("requesting status from gateway", "host", hostName)
 		online, err := c.Status(hostName)
 		if err != nil {
-			slog.Debug("fail to obtain host status from gateway", "err", err)
+			slog.Debug("failed to obtain host status from gateway", "err", err)
 			return err
 		}
 
