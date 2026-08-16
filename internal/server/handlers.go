@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/eevandeya/lar/internal/api"
-	"github.com/eevandeya/lar/internal/gateway/arp"
+	"github.com/eevandeya/lar/internal/arp"
 )
 
 func (s *Server) writeError(w http.ResponseWriter, statusCode int, code api.ErrorCode, message string) error {
