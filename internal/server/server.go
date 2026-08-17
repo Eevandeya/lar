@@ -26,6 +26,7 @@ func NewServer(cfg *config.GatewayConfig) *Server {
 	}
 	s.mux.HandleFunc("GET /status", s.statusHandler)
 	s.mux.HandleFunc("POST /wake", s.wakeHandler)
+	s.mux.HandleFunc("POST /shutdown", s.shutdownHandler)
 	return &s
 }
 

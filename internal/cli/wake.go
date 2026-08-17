@@ -11,7 +11,7 @@ import (
 var wakeCmd = &cobra.Command{
 	Use:   "wake [host]",
 	Short: "Wake host using Wake-on-LAN",
-	Long:  "Send a magic packet to wake a host using Wake-on-LAN",
+	Long:  "Request gateway to send a magic packet to wake a host using Wake-on-LAN",
 	Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) != 1 {
 			return &ArgumentNumberError{

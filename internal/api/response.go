@@ -5,7 +5,7 @@ type StatusResponse struct {
 }
 
 type WakeResponse struct {
-	Sent bool `json:"sent"`
+	Sent bool `json:"sent"` // TODO: get rid of it?
 }
 
 type ErrorResponse struct {

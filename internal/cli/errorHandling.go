@@ -53,6 +53,8 @@ func HandleError(cmd *cobra.Command, err error) int {
 			_, _ = fmt.Fprintf(os.Stderr, "%s gateway failed to check host status\n", errorPrefix)
 		case api.ErrWOLFailed:
 			_, _ = fmt.Fprintf(os.Stderr, "%s gateway failed to send magic packet\n", errorPrefix)
+		case api.ErrSSHFailed:
+			_, _ = fmt.Fprintf(os.Stderr, "%s gateway failed to shutdown host via ssh\n", errorPrefix)
 		default:
 			_, _ = fmt.Fprintf(os.Stderr, "%s %s\n", errorPrefix, apiErr.Message)
 		}

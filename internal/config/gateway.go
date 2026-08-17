@@ -6,6 +6,7 @@ type GatewayConfig struct {
 	Secret        string          `yaml:"secret"`
 	InterfaceName string          `yaml:"interface"`
 	Port          uint16          `yaml:"port"`
+	SshPort       uint16          `yaml:"ssh-port"`
 }
 
 type Host struct {

@@ -9,6 +9,7 @@ import (
 
 	"github.com/eevandeya/lar/internal/api"
 	"github.com/eevandeya/lar/internal/arp"
+	"github.com/eevandeya/lar/internal/ssh"
 	"github.com/eevandeya/lar/internal/wol"
 )
 
@@ -142,5 +143,44 @@ func (s *Server) wakeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	return
+}
+
+func (s *Server) shutdownHandler(w http.ResponseWriter, r *http.Request) {
+	if !s.checkAuth(r) {
+		if err := s.writeError(w, http.StatusUnauthorized, api.ErrUnauthorized, "invalid credentials"); err != nil {
+			slog.Error("failed to write error response", "err", err)
+		}
+		return
+	}
+
+	queryParams := r.URL.Query()
+	hostName := queryParams.Get("host")
+
+	if hostName == "" {
+		if err := s.writeError(w, http.StatusBadRequest, api.ErrMissingHostName, "missing host name query param"); err != nil {
+			slog.Error("failed to write error response", "err", err)
+		}
+		return
+	}
+
+	host, ok := s.cfg.Hosts[hostName]
+	if !ok {
+		if err := s.writeError(w, http.StatusBadRequest, api.ErrInvalidHostName, "invalid host name"); err != nil {
+			slog.Error("failed to write error response", "err", err)
+		}
+		return
+	}
+
+	err := ssh.Shutdown(host.User, host.IdentityFilePath, net.IP(host.Address), s.cfg.SshPort)
+	if err != nil {
+		slog.Debug("failed to shutdown host", "err", err)
+		if err = s.writeError(w, http.StatusBadRequest, api.ErrSSHFailed, "ssh to host failed"); err != nil {
+			slog.Error("failed to write error response", "err", err)
+		}
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 	return
 }

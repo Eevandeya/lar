@@ -17,6 +17,7 @@ func LoadGateway(path string) (*GatewayConfig, error) {
 	cfg := GatewayConfig{
 		Broadcast: IP(net.ParseIP("255.255.255.255")),
 		Port:      8080,
+		SshPort:   22,
 	}
 
 	err = yaml.Unmarshal(data, &cfg)
