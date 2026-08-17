@@ -31,9 +31,11 @@ func NewServer(cfg *config.GatewayConfig) *Server {
 }
 
 func (s *Server) ListenAndServer(port uint16) error {
+	handler := loggingMiddleware(s.authMiddleware(s.mux))
+
 	server := &http.Server{
 		Addr:           fmt.Sprintf(":%d", port),
-		Handler:        loggingMiddleware(s.mux),
+		Handler:        handler,
 		ReadTimeout:    readTimeout,
 		WriteTimeout:   writeTimeout,
 		MaxHeaderBytes: maxHeaderBytes,
