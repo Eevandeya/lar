@@ -1,15 +1,11 @@
 package config
 
 import (
-	"errors"
 	"net"
 )
 
 type IP net.IP
 type MACAddr net.HardwareAddr
-
-var ErrInvalidIPAddress = errors.New("invalid ip address")
-var ErrUnsupportedIPVersion = errors.New("only IPv4 is supported")
 
 func (i *IP) UnmarshalText(text []byte) error {
 	ip := net.ParseIP(string(text))

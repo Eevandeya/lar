@@ -44,8 +44,8 @@ func main() {
 	}
 
 	s := server.NewServer(cfg)
-	slog.Info("starting server", "port", cfg.Port)
-	if err = s.ListenAndServer(cfg.Port); err != nil {
+	slog.Info("starting server", "port", cfg.Server.Port)
+	if err = s.ListenAndServer(cfg.Server.Port); err != nil {
 		slog.Error("server stopped", "error", err)
 		os.Exit(1)
 	}

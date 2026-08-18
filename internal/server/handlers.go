@@ -15,7 +15,7 @@ import (
 	"github.com/eevandeya/lar/internal/wol"
 )
 
-func (s *Server) getHostOrWriteError(w http.ResponseWriter, query url.Values) (*config.Host, error) {
+func (s *Server) getHostOrWriteError(w http.ResponseWriter, query url.Values) (*config.Machine, error) {
 	hostName := query.Get("host")
 
 	if hostName == "" {
@@ -25,7 +25,7 @@ func (s *Server) getHostOrWriteError(w http.ResponseWriter, query url.Values) (*
 		return nil, errors.New("host name query is missing in query")
 	}
 
-	host, ok := s.cfg.Hosts[hostName]
+	host, ok := s.cfg.Machines[hostName]
 	if !ok {
 		if err := writeError(w, http.StatusBadRequest, api.ErrInvalidHostName, "invalid host name"); err != nil {
 			slog.Error("failed to write error response", "err", err)
@@ -43,7 +43,7 @@ func (s *Server) statusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	iface, err := net.InterfaceByName(s.cfg.InterfaceName)
+	iface, err := net.InterfaceByName(s.cfg.Server.ARPInterfaceName)
 	if err != nil {
 		if err = writeError(w, http.StatusInternalServerError, api.ErrInterfaceUnavailable, "configured interface is unavailable"); err != nil {
 			slog.Error("failed to write error response", "err", err)
@@ -80,7 +80,7 @@ func (s *Server) wakeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = wol.Wake(net.HardwareAddr(host.MAC), net.IP(s.cfg.Broadcast))
+	err = wol.Wake(net.HardwareAddr(host.MAC), net.IP(s.cfg.Server.Broadcast))
 	if err != nil {
 		slog.Error("Wake-on-Lan failed", "err", err)
 		if err = writeError(w, http.StatusInternalServerError, api.ErrWOLFailed, "wake-on-lan has failed"); err != nil {
@@ -100,7 +100,7 @@ func (s *Server) shutdownHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = ssh.Shutdown(host.User, host.IdentityFilePath, net.IP(host.Address), s.cfg.SshPort)
+	err = ssh.Shutdown(host.User, host.IdentityFilePath, net.IP(host.Address), host.SSHPort)
 	if err != nil {
 		slog.Debug("failed to shutdown host", "err", err)
 		if err = writeError(w, http.StatusBadRequest, api.ErrSSHFailed, "ssh to host failed"); err != nil {

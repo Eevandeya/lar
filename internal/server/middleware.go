@@ -41,7 +41,7 @@ func (s *Server) authMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		if strings.TrimPrefix(authPayload, "Bearer ") != s.cfg.Secret {
+		if strings.TrimPrefix(authPayload, "Bearer ") != s.cfg.Server.Secret {
 			writeAuthError(w)
 			return
 		}
