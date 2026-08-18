@@ -18,7 +18,7 @@ type Server struct {
 	Port             uint16     `yaml:"port"`
 	Broadcast        IP         `yaml:"broadcast"`
 	Secret           string     `yaml:"secret"`
-	ARPInterfaceName string     `yaml:"apr-interface"`
+	ARPInterfaceName string     `yaml:"arp-interface"`
 	TLSConfig        *TLSConfig `yaml:"tls"`
 }
 

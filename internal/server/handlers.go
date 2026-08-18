@@ -15,30 +15,30 @@ import (
 	"github.com/eevandeya/lar/internal/wol"
 )
 
-func (s *Server) getHostOrWriteError(w http.ResponseWriter, query url.Values) (*config.Machine, error) {
-	hostName := query.Get("host")
+func (s *Server) getMachineOrWriteError(w http.ResponseWriter, query url.Values) (*config.Machine, error) {
+	machineName := query.Get("machine")
 
-	if hostName == "" {
-		if err := writeError(w, http.StatusBadRequest, api.ErrMissingHostName, "missing host name query param"); err != nil {
+	if machineName == "" {
+		if err := writeError(w, http.StatusBadRequest, api.ErrMissingMachineName, "missing machine name query param"); err != nil {
 			slog.Error("failed to write error response", "err", err)
 		}
-		return nil, errors.New("host name query is missing in query")
+		return nil, errors.New("machine name query is missing in query")
 	}
 
-	host, ok := s.cfg.Machines[hostName]
+	machine, ok := s.cfg.Machines[machineName]
 	if !ok {
-		if err := writeError(w, http.StatusBadRequest, api.ErrInvalidHostName, "invalid host name"); err != nil {
+		if err := writeError(w, http.StatusBadRequest, api.ErrInvalidMachineName, "invalid machine name"); err != nil {
 			slog.Error("failed to write error response", "err", err)
 		}
-		return nil, errors.New("no much for requested host in config")
+		return nil, errors.New("no much for requested machine in config")
 	}
 
-	return host, nil
+	return machine, nil
 }
 
 func (s *Server) statusHandler(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
-	host, err := s.getHostOrWriteError(w, query)
+	machine, err := s.getMachineOrWriteError(w, query)
 	if err != nil {
 		return
 	}
@@ -51,7 +51,7 @@ func (s *Server) statusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	online, err := arp.Probe(net.HardwareAddr(host.MAC), net.IP(host.Address), iface)
+	online, err := arp.Probe(net.HardwareAddr(machine.MAC), net.IP(machine.Address), iface)
 	if err != nil {
 		slog.Error("ARP probe failed", "err", err)
 		if err = writeError(w, http.StatusInternalServerError, api.ErrARPProbingFailed, "arp probing has failed"); err != nil {
@@ -75,12 +75,12 @@ func (s *Server) statusHandler(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) wakeHandler(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
-	host, err := s.getHostOrWriteError(w, query)
+	machine, err := s.getMachineOrWriteError(w, query)
 	if err != nil {
 		return
 	}
 
-	err = wol.Wake(net.HardwareAddr(host.MAC), net.IP(s.cfg.Server.Broadcast))
+	err = wol.Wake(net.HardwareAddr(machine.MAC), net.IP(s.cfg.Server.Broadcast))
 	if err != nil {
 		slog.Error("Wake-on-Lan failed", "err", err)
 		if err = writeError(w, http.StatusInternalServerError, api.ErrWOLFailed, "wake-on-lan has failed"); err != nil {
@@ -95,15 +95,15 @@ func (s *Server) wakeHandler(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) shutdownHandler(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
-	host, err := s.getHostOrWriteError(w, query)
+	machine, err := s.getMachineOrWriteError(w, query)
 	if err != nil {
 		return
 	}
 
-	err = ssh.Shutdown(host.User, host.IdentityFilePath, net.IP(host.Address), host.SSHPort)
+	err = ssh.Shutdown(machine.User, machine.IdentityFilePath, net.IP(machine.Address), machine.SSHPort)
 	if err != nil {
-		slog.Debug("failed to shutdown host", "err", err)
-		if err = writeError(w, http.StatusBadRequest, api.ErrSSHFailed, "ssh to host failed"); err != nil {
+		slog.Debug("failed to shutdown machine", "err", err)
+		if err = writeError(w, http.StatusBadRequest, api.ErrSSHFailed, "ssh to machine failed"); err != nil {
 			slog.Error("failed to write error response", "err", err)
 		}
 		return

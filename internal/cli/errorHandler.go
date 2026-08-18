@@ -39,23 +39,23 @@ func HandleError(cmd *cobra.Command, err error) int {
 		switch apiErr.Code {
 		case api.ErrUnauthorized:
 			_, _ = fmt.Fprintf(os.Stderr, "%s authentication failed\n", errorPrefix)
-		case api.ErrMissingHostName:
-			_, _ = fmt.Fprintf(os.Stderr, "%s gateway did not receive host name\n", errorPrefix)
-		case api.ErrInvalidHostName:
-			var hostErr client.HostError
-			if errors.As(err, &hostErr) {
-				_, _ = fmt.Fprintf(os.Stderr, "%s host '%s' not found\n", errorPrefix, hostErr.HostName)
+		case api.ErrMissingMachineName:
+			_, _ = fmt.Fprintf(os.Stderr, "%s gateway did not receive machine name\n", errorPrefix)
+		case api.ErrInvalidMachineName:
+			var machineErr client.MachineError
+			if errors.As(err, &machineErr) {
+				_, _ = fmt.Fprintf(os.Stderr, "%s machine '%s' not found\n", errorPrefix, machineErr.MachineName)
 			} else {
-				_, _ = fmt.Fprintf(os.Stderr, "%s host not found\n", errorPrefix)
+				_, _ = fmt.Fprintf(os.Stderr, "%s machine not found\n", errorPrefix)
 			}
 		case api.ErrInterfaceUnavailable:
 			_, _ = fmt.Fprintf(os.Stderr, "%s network interface on gateway is unavailable\n", errorPrefix)
 		case api.ErrARPProbingFailed:
-			_, _ = fmt.Fprintf(os.Stderr, "%s gateway failed to check host status\n", errorPrefix)
+			_, _ = fmt.Fprintf(os.Stderr, "%s gateway failed to check machine status\n", errorPrefix)
 		case api.ErrWOLFailed:
 			_, _ = fmt.Fprintf(os.Stderr, "%s gateway failed to send magic packet\n", errorPrefix)
 		case api.ErrSSHFailed:
-			_, _ = fmt.Fprintf(os.Stderr, "%s gateway failed to shutdown host via ssh\n", errorPrefix)
+			_, _ = fmt.Fprintf(os.Stderr, "%s gateway failed to shutdown machine via ssh\n", errorPrefix)
 		default:
 			_, _ = fmt.Fprintf(os.Stderr, "%s %s\n", errorPrefix, apiErr.Message)
 		}

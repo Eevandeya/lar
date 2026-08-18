@@ -9,22 +9,22 @@ import (
 )
 
 var shutDownCmd = &cobra.Command{
-	Use:   "shutdown [host]",
-	Short: "Shutdown host using ssh",
-	Long:  "Request gateway to shutdown a host using ssh",
+	Use:   "shutdown [machine]",
+	Short: "Shutdown machine using ssh",
+	Long:  "Request gateway to shutdown a machine using ssh",
 	Args:  requireOneArg,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		hostName := args[0]
+		machineName := args[0]
 		c := client.New("http://"+cfg.Gateway.Address, cfg.Gateway.Secret)
 
-		slog.Debug("requesting gateway to shutdown a host", "host", hostName)
-		err := c.Shutdown(hostName)
+		slog.Debug("requesting gateway to shutdown a machine", "machine", machineName)
+		err := c.Shutdown(machineName)
 		if err != nil {
-			slog.Debug("failed to shutdown the host", "err", err)
+			slog.Debug("failed to shutdown the machine", "err", err)
 			return err
 		}
 
-		fmt.Printf("Gateway successfully shutdown %s\n", hostName)
+		fmt.Printf("Gateway successfully shutdown %s\n", machineName)
 
 		return nil
 	},

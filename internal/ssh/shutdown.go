@@ -24,7 +24,7 @@ func loadSigner(keyPath string) (ssh.Signer, error) {
 	return signer, nil
 }
 
-func Shutdown(user, keyPath string, hostIP net.IP, sshPort uint16) error {
+func Shutdown(user, keyPath string, machineIP net.IP, sshPort uint16) error {
 	signer, err := loadSigner(keyPath)
 	if err != nil {
 		return err
@@ -38,7 +38,7 @@ func Shutdown(user, keyPath string, hostIP net.IP, sshPort uint16) error {
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // TODO: figure it out
 	}
 
-	addr := net.JoinHostPort(hostIP.String(), strconv.FormatUint(uint64(sshPort), 10))
+	addr := net.JoinHostPort(machineIP.String(), strconv.FormatUint(uint64(sshPort), 10))
 	client, err := ssh.Dial("tcp", addr, config)
 	if err != nil {
 		return err

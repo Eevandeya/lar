@@ -4,8 +4,8 @@ type ErrorCode string
 
 const (
 	ErrUnauthorized         ErrorCode = "unauthorized"
-	ErrMissingHostName      ErrorCode = "missing_host_name"
-	ErrInvalidHostName      ErrorCode = "invalid_host_name"
+	ErrMissingMachineName   ErrorCode = "missing_machine_name"
+	ErrInvalidMachineName   ErrorCode = "invalid_machine_name"
 	ErrInterfaceUnavailable ErrorCode = "interface_unavailable"
 	ErrARPProbingFailed     ErrorCode = "arp_probing_failed"
 	ErrWOLFailed            ErrorCode = "wol_failed"

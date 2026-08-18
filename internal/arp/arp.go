@@ -13,10 +13,10 @@ import (
 
 const readTimeout = 300
 
-func Probe(macAddr net.HardwareAddr, hostIP net.IP, ifi *net.Interface) (bool, error) {
-	hostIP = hostIP.To4()
-	if hostIP == nil {
-		return false, errors.New("host IP is not IPv4")
+func Probe(macAddr net.HardwareAddr, machineIP net.IP, ifi *net.Interface) (bool, error) {
+	machineIP = machineIP.To4()
+	if machineIP == nil {
+		return false, errors.New("machine IP is not IPv4")
 	}
 
 	arpClient, err := arp.Dial(ifi)
@@ -27,9 +27,9 @@ func Probe(macAddr net.HardwareAddr, hostIP net.IP, ifi *net.Interface) (bool, e
 		_ = arpClient.Close()
 	}()
 
-	addr, ok := netip.AddrFromSlice(hostIP) // mdlayher/arp uses netip.Addr instead of net.IP
+	addr, ok := netip.AddrFromSlice(machineIP) // mdlayher/arp uses netip.Addr instead of net.IP
 	if !ok {
-		return false, fmt.Errorf("invalid IPv4 address: %v", hostIP)
+		return false, fmt.Errorf("invalid IPv4 address: %v", machineIP)
 	}
 
 	err = arpClient.Request(addr)

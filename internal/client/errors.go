@@ -16,16 +16,16 @@ func (e APIError) Error() string {
 	return e.Message
 }
 
-type HostError struct {
-	HostName string
-	Err      error
+type MachineError struct {
+	MachineName string
+	Err         error
 }
 
-func (e HostError) Error() string {
+func (e MachineError) Error() string {
 	return e.Err.Error()
 }
 
-func (e HostError) Unwrap() error {
+func (e MachineError) Unwrap() error {
 	return e.Err
 }
 

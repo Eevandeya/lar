@@ -9,18 +9,18 @@ import (
 )
 
 var statusCmd = &cobra.Command{
-	Use:   "status [host]",
-	Short: "Check host status",
-	Long:  "Check whether a host is online.",
+	Use:   "status [machine]",
+	Short: "Check machine status",
+	Long:  "Check whether a machine is online.",
 	Args:  requireOneArg,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		hostName := args[0]
+		machineName := args[0]
 		c := client.New("http://"+cfg.Gateway.Address, cfg.Gateway.Secret)
 
-		slog.Debug("requesting status from gateway", "host", hostName)
-		online, err := c.Status(hostName)
+		slog.Debug("requesting status from gateway", "machine", machineName)
+		online, err := c.Status(machineName)
 		if err != nil {
-			slog.Debug("failed to obtain host status from gateway", "err", err)
+			slog.Debug("failed to obtain machine status from gateway", "err", err)
 			return err
 		}
 
@@ -38,9 +38,9 @@ var statusCmd = &cobra.Command{
 		}
 
 		if online {
-			fmt.Printf("%s: %sonline%s\n", hostName, green, reset)
+			fmt.Printf("%s: %sonline%s\n", machineName, green, reset)
 		} else {
-			fmt.Printf("%s: %soffline%s\n", hostName, red, reset)
+			fmt.Printf("%s: %soffline%s\n", machineName, red, reset)
 		}
 		return nil
 	},
