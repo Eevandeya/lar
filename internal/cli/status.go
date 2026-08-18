@@ -12,17 +12,7 @@ var statusCmd = &cobra.Command{
 	Use:   "status [host]",
 	Short: "Check host status",
 	Long:  "Check whether a host is online.",
-	Args: func(cmd *cobra.Command, args []string) error {
-		if len(args) != 1 {
-			return &ArgumentNumberError{
-				Expected: 1,
-				Got:      len(args),
-			}
-		}
-
-		return nil
-	},
-
+	Args:  requireOneArg,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		hostName := args[0]
 		c := client.New("http://"+cfg.Gateway.Address, cfg.Gateway.Secret)
