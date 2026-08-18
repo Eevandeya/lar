@@ -28,6 +28,7 @@ func HandleError(cmd *cobra.Command, err error) int {
 	errorPrefix := fmt.Sprintf("%sError:%s", red, reset)
 
 	var apiErr client.APIError
+	var unexpectedApiErr client.UnexpectedAPIError
 	var netErr net.Error
 	var argErr *ArgumentNumberError
 	var codeErr ExitCodeError
@@ -58,6 +59,9 @@ func HandleError(cmd *cobra.Command, err error) int {
 		default:
 			_, _ = fmt.Fprintf(os.Stderr, "%s %s\n", errorPrefix, apiErr.Message)
 		}
+
+	case errors.As(err, &unexpectedApiErr):
+		_, _ = fmt.Fprintf(os.Stderr, "%s unexpected response from gateway (HTTP %d)\n", errorPrefix, unexpectedApiErr)
 
 	case errors.As(err, &netErr):
 		switch {

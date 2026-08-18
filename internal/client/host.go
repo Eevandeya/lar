@@ -2,6 +2,7 @@ package client
 
 import (
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -26,22 +27,28 @@ func (c *Client) requestHost(method, target, host string) (*http.Response, error
 	}
 
 	if resp.StatusCode >= 400 {
-		var errorResponse api.ErrorResponse
-		if err = json.NewDecoder(resp.Body).Decode(&errorResponse); err != nil {
-			return nil, err
+		if resp.Header.Get("Content-Type") == "Application/json" {
+			var errorResponse api.ErrorResponse
+			if err = json.NewDecoder(resp.Body).Decode(&errorResponse); err != nil {
+				return nil, fmt.Errorf("failed to parse error response body with code %d: %w", resp.StatusCode, err)
+			}
+			return nil, &HostError{
+				HostName: host,
+				Err: APIError{
+					StatusCode: resp.StatusCode,
+					Code:       errorResponse.Error.Code,
+					Message:    errorResponse.Error.Message,
+				},
+			}
 		}
-		return nil, &HostError{
-			HostName: host,
-			Err: APIError{
-				StatusCode: resp.StatusCode,
-				Code:       errorResponse.Error.Code,
-				Message:    errorResponse.Error.Message,
-			},
+		err = resp.Body.Close()
+		if err != nil {
+			slog.Debug("failed to close response body", "err", err)
 		}
+		return nil, UnexpectedAPIError(resp.StatusCode)
 	}
 
 	return resp, nil
-
 }
 
 func (c *Client) Shutdown(host string) error {

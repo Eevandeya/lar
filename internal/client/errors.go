@@ -1,6 +1,10 @@
 package client
 
-import "github.com/eevandeya/lar/internal/api"
+import (
+	"fmt"
+
+	"github.com/eevandeya/lar/internal/api"
+)
 
 type APIError struct {
 	StatusCode int
@@ -23,4 +27,10 @@ func (e HostError) Error() string {
 
 func (e HostError) Unwrap() error {
 	return e.Err
+}
+
+type UnexpectedAPIError int
+
+func (e UnexpectedAPIError) Error() string {
+	return fmt.Sprintf("unexpected response from gateway (HTTP %d)", e)
 }
