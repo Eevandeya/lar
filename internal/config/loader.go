@@ -15,11 +15,9 @@ var defaultServerConfig = Server{
 	TLSConfig: nil,
 }
 
-var defaultMachineConfig = Machine{
-	SSHPort: 22,
-}
+const defaultSSHPort = 22
 
-func checkMandatoryValues(cfg *GatewayConfig) []string {
+func validateRequiredValues(cfg *GatewayConfig) error {
 	var missing []string
 
 	if cfg.Server.Secret == "" {
@@ -31,6 +29,11 @@ func checkMandatoryValues(cfg *GatewayConfig) []string {
 	}
 
 	for key, value := range cfg.Machines {
+		if value == nil {
+			cfg.Machines[key] = &Machine{}
+			value = cfg.Machines[key]
+		}
+
 		prefix := fmt.Sprintf("machines.%s", key)
 
 		if value.Address == nil {
@@ -44,13 +47,38 @@ func checkMandatoryValues(cfg *GatewayConfig) []string {
 		}
 	}
 
-	return missing
+	if missing != nil {
+		return MissingConfigValuesErr(missing)
+	}
+	return nil
+}
+
+func validateTLSConfig(cfg *GatewayConfig) error {
+	if cfg.Server.TLSConfig == nil {
+		return nil
+	}
+
+	if cfg.Server.TLSConfig.CertificateFilePath == "" && cfg.Server.TLSConfig.KeyFilePath != "" {
+		return IncompleteTLSConfigErr{Type: CertificatePathMissing}
+	} else if cfg.Server.TLSConfig.CertificateFilePath != "" && cfg.Server.TLSConfig.KeyFilePath == "" {
+		return IncompleteTLSConfigErr{Type: PrivateKeyPathMissing}
+	}
+	return nil
+}
+
+func normalizeConfig(cfg *GatewayConfig) {
+	if cfg.Server.TLSConfig == nil {
+		return
+	}
+	if cfg.Server.TLSConfig.CertificateFilePath == "" && cfg.Server.TLSConfig.KeyFilePath == "" {
+		cfg.Server.TLSConfig = nil
+	}
 }
 
 func setDefaultMachineValues(cfg *GatewayConfig) {
 	for key := range cfg.Machines {
 		if cfg.Machines[key].SSHPort == 0 {
-			cfg.Machines[key].SSHPort = defaultMachineConfig.SSHPort
+			cfg.Machines[key].SSHPort = defaultSSHPort
 		}
 	}
 }
@@ -71,10 +99,17 @@ func LoadGateway(path string) (*GatewayConfig, error) {
 	}
 
 	setDefaultMachineValues(&cfg)
-	missing := checkMandatoryValues(&cfg)
-	if missing != nil {
-		return nil, MissingConfigValuesErr(missing)
+	err = validateRequiredValues(&cfg)
+	if err != nil {
+		return nil, err
 	}
+
+	err = validateTLSConfig(&cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	normalizeConfig(&cfg)
 
 	return &cfg, nil
 }

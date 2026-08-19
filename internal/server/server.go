@@ -1,8 +1,11 @@
 package server
 
 import (
-	"fmt"
+	"errors"
+	"log/slog"
+	"net"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/eevandeya/lar/internal/config"
@@ -30,16 +33,30 @@ func NewServer(cfg *config.GatewayConfig) *Server {
 	return &s
 }
 
-func (s *Server) ListenAndServer(port uint16) error {
+func (s *Server) ListenAndServer(useHTTP bool) error {
 	handler := loggingMiddleware(s.authMiddleware(s.mux))
 
 	server := &http.Server{
-		Addr:           fmt.Sprintf(":%d", port),
+		Addr: net.JoinHostPort(
+			net.IP(s.cfg.Server.Host).String(),
+			strconv.FormatUint(uint64(s.cfg.Server.Port), 10)),
 		Handler:        handler,
 		ReadTimeout:    readTimeout,
 		WriteTimeout:   writeTimeout,
 		MaxHeaderBytes: maxHeaderBytes,
 	}
 
-	return server.ListenAndServe()
+	if useHTTP {
+		slog.Warn("Using unencrypted HTTP." +
+			"Traffic is not encrypted and may be intercepted.")
+		return server.ListenAndServe()
+	}
+
+	if s.cfg.Server.TLSConfig != nil {
+		return server.ListenAndServeTLS(
+			s.cfg.Server.TLSConfig.CertificateFilePath,
+			s.cfg.Server.TLSConfig.KeyFilePath)
+	}
+
+	return errors.New("no tls config found")
 }
