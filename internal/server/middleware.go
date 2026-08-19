@@ -1,10 +1,13 @@
 package server
 
 import (
+	"crypto/subtle"
 	"log/slog"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/eevandeya/lar/internal/api"
 )
 
 type ResponseWriter struct {
@@ -36,12 +39,14 @@ func (s *Server) authMiddleware(next http.Handler) http.Handler {
 		// NOTE: simplification for now
 		authPayload := authHeader[0]
 
-		if !strings.HasPrefix(authPayload, "Bearer ") {
+		if !strings.HasPrefix(authPayload, api.BearerPrefix) {
 			writeAuthError(w)
 			return
 		}
 
-		if strings.TrimPrefix(authPayload, "Bearer ") != s.cfg.Server.Secret {
+		token := strings.TrimPrefix(authPayload, api.BearerPrefix)
+
+		if subtle.ConstantTimeCompare([]byte(token), []byte(s.cfg.Server.Secret)) == 0 {
 			writeAuthError(w)
 			return
 		}

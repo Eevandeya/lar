@@ -78,6 +78,7 @@ func main() {
 			_, _ = fmt.Fprintf(os.Stderr, "%s invalid config: %s\n", errorPrefix, err.Error())
 
 		}
+		return
 	}
 
 	if !*useHTTP && cfg.Server.TLSConfig == nil {
