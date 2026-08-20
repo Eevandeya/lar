@@ -15,7 +15,7 @@ var statusCmd = &cobra.Command{
 	Args:  requireOneArg,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		machineName := args[0]
-		c := client.New("http://"+cfg.Gateway.Address, cfg.Gateway.Secret)
+		c := client.New(cfg.Gateway.Address, cfg.Gateway.Secret)
 
 		slog.Debug("requesting status from gateway", "machine", machineName)
 		online, err := c.Status(machineName)
