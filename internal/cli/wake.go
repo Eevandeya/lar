@@ -24,7 +24,7 @@ var wakeCmd = &cobra.Command{
 			return err
 		}
 
-		fmt.Printf("Gateway successfully sent magic packet to %s\n", machineName)
+		fmt.Printf("%s: %swake request sent%s\n", machineName, blue, reset)
 
 		return nil
 	},

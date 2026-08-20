@@ -24,7 +24,7 @@ var shutDownCmd = &cobra.Command{
 			return err
 		}
 
-		fmt.Printf("Gateway successfully shutdown %s\n", machineName)
+		fmt.Printf("%s: %sshutdown successful%s\n", machineName, cyan, reset)
 
 		return nil
 	},
