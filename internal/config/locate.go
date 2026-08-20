@@ -13,16 +13,6 @@ var defaultConfigNames = []string{
 
 var ErrNoConfig = errors.New("config was not found")
 
-func fileExists(path string) (bool, error) {
-	if _, err := os.Stat(path); err == nil {
-		return true, nil
-	} else if errors.Is(err, os.ErrNotExist) {
-		return false, nil
-	} else {
-		return false, err
-	}
-}
-
 func LocateClientConfig() (string, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
@@ -33,14 +23,18 @@ func LocateClientConfig() (string, error) {
 	for _, relativeConfigPath := range defaultConfigNames {
 		configPath := filepath.Join(configDir, relativeConfigPath)
 
-		ok, err := fileExists(configPath)
+		stat, err := os.Stat(configPath)
+		if os.IsNotExist(err) {
+			continue
+		}
 		if err != nil {
 			return "", err
 		}
-
-		if ok {
-			return configPath, nil
+		if stat.IsDir() {
+			continue
 		}
+
+		return configPath, nil
 	}
 
 	return "", ErrNoConfig
