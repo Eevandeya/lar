@@ -27,6 +27,10 @@ func (m *MACAddr) UnmarshalText(text []byte) error {
 		return err
 	}
 
+	if len(addr) != 6 {
+		return ErrInvalidMacAddressFormat
+	}
+
 	*m = MACAddr(addr)
 	return nil
 }
