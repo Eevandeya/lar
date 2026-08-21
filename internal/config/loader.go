@@ -1,12 +1,15 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"os"
 
 	"gopkg.in/yaml.v3"
 )
+
+var ErrNilConfig = errors.New("config is nil")
 
 var defaultServerConfig = Server{
 	Host:      IP(net.ParseIP("0.0.0.0")),
@@ -18,6 +21,9 @@ var defaultServerConfig = Server{
 const defaultSSHPort = 22
 
 func validateRequiredValues(cfg *GatewayConfig) error {
+	if cfg == nil {
+		return ErrNilConfig
+	}
 	var missing []string
 
 	if cfg.Server.Secret == "" {
