@@ -59,14 +59,14 @@ func validateRequiredValues(cfg *GatewayConfig) error {
 	return nil
 }
 
-func validateTLSConfig(cfg *GatewayConfig) error {
-	if cfg.Server.TLSConfig == nil {
+func validateTLSConfig(tls *TLSConfig) error {
+	if tls == nil {
 		return nil
 	}
 
-	if cfg.Server.TLSConfig.CertificateFilePath == "" && cfg.Server.TLSConfig.KeyFilePath != "" {
+	if tls.CertificateFilePath == "" && tls.KeyFilePath != "" {
 		return IncompleteTLSConfigErr{Type: CertificatePathMissing}
-	} else if cfg.Server.TLSConfig.CertificateFilePath != "" && cfg.Server.TLSConfig.KeyFilePath == "" {
+	} else if tls.CertificateFilePath != "" && tls.KeyFilePath == "" {
 		return IncompleteTLSConfigErr{Type: PrivateKeyPathMissing}
 	}
 	return nil
@@ -81,10 +81,10 @@ func normalizeConfig(cfg *GatewayConfig) {
 	}
 }
 
-func setDefaultMachineValues(cfg *GatewayConfig) {
-	for key := range cfg.Machines {
-		if cfg.Machines[key].SSHPort == 0 {
-			cfg.Machines[key].SSHPort = defaultSSHPort
+func setDefaultMachineValues(machines map[string]*Machine) {
+	for key := range machines {
+		if machines[key].SSHPort == 0 {
+			machines[key].SSHPort = defaultSSHPort
 		}
 	}
 }
@@ -104,13 +104,13 @@ func LoadGateway(path string) (*GatewayConfig, error) {
 		return nil, err
 	}
 
-	setDefaultMachineValues(&cfg)
+	setDefaultMachineValues(cfg.Machines)
 	err = validateRequiredValues(&cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	err = validateTLSConfig(&cfg)
+	err = validateTLSConfig(cfg.Server.TLSConfig)
 	if err != nil {
 		return nil, err
 	}
