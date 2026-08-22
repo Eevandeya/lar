@@ -29,6 +29,9 @@ func (e IncompleteTLSConfigErr) Error() string {
 type MissingConfigValuesErr []string
 
 func (e MissingConfigValuesErr) Error() string {
+	if len(e) < 1 {
+		return "missing mandatory values in config"
+	}
 	return "missing mandatory values in config: " + strings.Join(e, ", ")
 }
 
