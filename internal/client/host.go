@@ -27,7 +27,7 @@ func (c *Client) requestMachine(method, target, machine string) (*http.Response,
 	}
 
 	if resp.StatusCode >= 400 {
-		if resp.Header.Get("Content-Type") == "Application/json" {
+		if resp.Header.Get("Content-Type") == api.ApplicationJSON {
 			var errorResponse api.ErrorResponse
 			if err = json.NewDecoder(resp.Body).Decode(&errorResponse); err != nil {
 				return nil, fmt.Errorf("failed to parse error response body with code %d: %w", resp.StatusCode, err)
@@ -52,7 +52,7 @@ func (c *Client) requestMachine(method, target, machine string) (*http.Response,
 }
 
 func (c *Client) Shutdown(machine string) error {
-	resp, err := c.requestMachine("POST", "/shutdown", machine)
+	resp, err := c.requestMachine(http.MethodPost, "/shutdown", machine)
 	if err != nil {
 		return err
 	}
@@ -65,7 +65,7 @@ func (c *Client) Shutdown(machine string) error {
 }
 
 func (c *Client) Status(machine string) (bool, error) {
-	resp, err := c.requestMachine("GET", "/status", machine)
+	resp, err := c.requestMachine(http.MethodGet, "/status", machine)
 	if err != nil {
 		return false, err
 	}
@@ -79,7 +79,7 @@ func (c *Client) Status(machine string) (bool, error) {
 }
 
 func (c *Client) Wake(machine string) error {
-	resp, err := c.requestMachine("POST", "/wake", machine)
+	resp, err := c.requestMachine(http.MethodPost, "/wake", machine)
 	if err != nil {
 		return err
 	}

@@ -15,7 +15,7 @@ func writeError(w http.ResponseWriter, statusCode int, code api.ErrorCode, messa
 			Message: message,
 		},
 	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", api.ApplicationJSON)
 	w.WriteHeader(statusCode)
 	return json.NewEncoder(w).Encode(respErr)
 }

@@ -62,7 +62,7 @@ func (s *Server) statusHandler(w http.ResponseWriter, r *http.Request) {
 
 	response := api.StatusResponse{Online: online}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", api.ApplicationJSON)
 	err = json.NewEncoder(w).Encode(response)
 
 	if err != nil {

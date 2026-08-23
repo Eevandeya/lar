@@ -1,3 +1,6 @@
 package api
 
-const BearerPrefix = "Bearer "
+const (
+	BearerPrefix    = "Bearer "
+	ApplicationJSON = "application/json"
+)
