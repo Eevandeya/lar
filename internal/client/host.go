@@ -32,6 +32,9 @@ func (c *Client) requestMachine(method, target, machine string) (*http.Response,
 			if err = json.NewDecoder(resp.Body).Decode(&errorResponse); err != nil {
 				return nil, fmt.Errorf("failed to parse error response body with code %d: %w", resp.StatusCode, err)
 			}
+			defer func() {
+				_ = resp.Body.Close()
+			}()
 			return nil, &MachineError{
 				MachineName: machine,
 				Err: APIError{
