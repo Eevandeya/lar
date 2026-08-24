@@ -33,7 +33,7 @@ func NewServer(cfg *config.GatewayConfig) *Server {
 	return &s
 }
 
-func (s *Server) ListenAndServer(useHTTP bool) error {
+func (s *Server) ListenAndServe(useHTTP bool) error {
 	handler := loggingMiddleware(s.authMiddleware(s.mux))
 
 	server := &http.Server{
