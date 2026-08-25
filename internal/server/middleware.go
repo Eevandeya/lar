@@ -30,14 +30,11 @@ func (w *ResponseWriter) WriteHeader(statusCode int) {
 
 func (s *Server) authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		authHeader, ok := r.Header["Authorization"]
-		if !ok || len(authHeader) == 0 {
+		authPayload := r.Header.Get("Authorization")
+		if authPayload == "" {
 			writeAuthError(w)
 			return
 		}
-
-		// NOTE: simplification for now
-		authPayload := authHeader[0]
 
 		if !strings.HasPrefix(authPayload, api.BearerPrefix) {
 			writeAuthError(w)
