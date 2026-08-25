@@ -34,7 +34,7 @@ func NewServer(cfg *config.GatewayConfig) *Server {
 }
 
 func (s *Server) ListenAndServe(useHTTP bool) error {
-	handler := loggingMiddleware(s.authMiddleware(s.mux))
+	handler := loggingMiddleware(slog.Default(), s.authMiddleware(s.mux))
 
 	server := &http.Server{
 		Addr: net.JoinHostPort(

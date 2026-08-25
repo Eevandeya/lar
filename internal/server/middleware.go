@@ -52,18 +52,18 @@ func (s *Server) authMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func loggingMiddleware(next http.Handler) http.Handler {
+func loggingMiddleware(logger *slog.Logger, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		rw := ResponseWriter{
 			writer: w,
-			status: http.StatusOK,
+			status: http.StatusOK, // WriteHeader is not called for implicit 200 responses
 		}
 
 		start := time.Now()
 
 		next.ServeHTTP(&rw, r)
 
-		slog.Info("request completed",
+		logger.Info("request completed",
 			"method", r.Method,
 			"path", r.URL.Path,
 			"status", rw.status,
