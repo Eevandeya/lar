@@ -88,7 +88,7 @@ func (s *Server) wakeHandler(w http.ResponseWriter, r *http.Request) {
 	err = wake(net.HardwareAddr(machine.MAC), net.IP(s.cfg.Server.Broadcast))
 	if err != nil {
 		slog.Error("Wake-on-Lan failed", "err", err)
-		if err = writeError(w, http.StatusInternalServerError, api.ErrWOLFailed, "wake-on-lan has failed"); err != nil {
+		if err = writeError(w, http.StatusInternalServerError, api.ErrWOLFailed, "wake-on-lan failed"); err != nil {
 			slog.Error("failed to write error response", "err", err)
 		}
 		return
