@@ -108,7 +108,7 @@ func (s *Server) shutdownHandler(w http.ResponseWriter, r *http.Request) {
 	err = shutdown(machine.User, machine.IdentityFilePath, net.IP(machine.Address), machine.SSHPort)
 	if err != nil {
 		slog.Debug("failed to shutdown machine", "err", err)
-		if err = writeError(w, http.StatusBadRequest, api.ErrSSHFailed, "ssh to machine failed"); err != nil {
+		if err = writeError(w, http.StatusInternalServerError, api.ErrSSHFailed, "ssh to machine failed"); err != nil {
 			slog.Error("failed to write error response", "err", err)
 		}
 		return
