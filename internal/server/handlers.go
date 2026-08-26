@@ -15,6 +15,11 @@ import (
 	"github.com/eevandeya/lar/internal/wol"
 )
 
+var interfaceByName = net.InterfaceByName
+var arpProbe = arp.Probe
+var wake = wol.Wake
+var shutdown = ssh.Shutdown
+
 func (s *Server) getMachineOrWriteError(w http.ResponseWriter, query url.Values) (*config.Machine, error) {
 	machineName := query.Get("machine")
 
@@ -43,7 +48,7 @@ func (s *Server) statusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	iface, err := net.InterfaceByName(s.cfg.Server.ARPInterfaceName)
+	ifi, err := interfaceByName(s.cfg.Server.ARPInterfaceName)
 	if err != nil {
 		if err = writeError(w, http.StatusInternalServerError, api.ErrInterfaceUnavailable, "configured interface is unavailable"); err != nil {
 			slog.Error("failed to write error response", "err", err)
@@ -51,7 +56,7 @@ func (s *Server) statusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	online, err := arp.Probe(net.HardwareAddr(machine.MAC), net.IP(machine.Address), iface)
+	online, err := arpProbe(net.HardwareAddr(machine.MAC), net.IP(machine.Address), ifi)
 	if err != nil {
 		slog.Error("ARP probe failed", "err", err)
 		if err = writeError(w, http.StatusInternalServerError, api.ErrARPProbingFailed, "arp probing has failed"); err != nil {
@@ -80,7 +85,7 @@ func (s *Server) wakeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = wol.Wake(net.HardwareAddr(machine.MAC), net.IP(s.cfg.Server.Broadcast))
+	err = wake(net.HardwareAddr(machine.MAC), net.IP(s.cfg.Server.Broadcast))
 	if err != nil {
 		slog.Error("Wake-on-Lan failed", "err", err)
 		if err = writeError(w, http.StatusInternalServerError, api.ErrWOLFailed, "wake-on-lan has failed"); err != nil {
@@ -100,7 +105,7 @@ func (s *Server) shutdownHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = ssh.Shutdown(machine.User, machine.IdentityFilePath, net.IP(machine.Address), machine.SSHPort)
+	err = shutdown(machine.User, machine.IdentityFilePath, net.IP(machine.Address), machine.SSHPort)
 	if err != nil {
 		slog.Debug("failed to shutdown machine", "err", err)
 		if err = writeError(w, http.StatusBadRequest, api.ErrSSHFailed, "ssh to machine failed"); err != nil {
