@@ -42,8 +42,7 @@ func HandleError(cmd *cobra.Command, err error) int {
 		case api.ErrMissingMachineName:
 			_, _ = fmt.Fprintf(os.Stderr, "%s gateway did not receive machine name\n", errorPrefix)
 		case api.ErrInvalidMachineName:
-			var machineErr client.MachineError
-			if errors.As(err, &machineErr) {
+			if machineErr, ok := errors.AsType[client.MachineError](err); ok {
 				_, _ = fmt.Fprintf(os.Stderr, "%s machine '%s' not found\n", errorPrefix, machineErr.MachineName)
 			} else {
 				_, _ = fmt.Fprintf(os.Stderr, "%s machine not found\n", errorPrefix)
