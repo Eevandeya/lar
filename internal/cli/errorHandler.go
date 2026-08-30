@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strings"
 	"syscall"
 
 	"github.com/eevandeya/lar/internal/api"
@@ -22,6 +23,10 @@ func isTimeout(err error) bool {
 func isDNSError(err error) bool {
 	var dnsError *net.DNSError
 	return errors.As(err, &dnsError)
+}
+
+func isUnknownCommand(err error) bool {
+	return strings.HasPrefix(err.Error(), "unknown command ")
 }
 
 func HandleError(cmd *cobra.Command, err error) int {
@@ -83,6 +88,9 @@ func HandleError(cmd *cobra.Command, err error) int {
 
 	case errors.As(err, &flagErr):
 		_, _ = fmt.Fprintf(os.Stderr, "%s %s\n\n%s\n", errorPrefix, flagErr.Error(), cmd.UsageString())
+
+	case isUnknownCommand(err):
+		_, _ = fmt.Fprintf(os.Stderr, "%s %s\n\n%s\n", errorPrefix, err.Error(), cmd.UsageString())
 
 	case errors.As(err, &codeErr):
 		return int(codeErr)
