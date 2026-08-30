@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	cmd, err := cli.RootCmd.ExecuteC()
+	cmd, err := cli.NewRootCommand().ExecuteC()
 	if err != nil {
 		os.Exit(cli.HandleError(cmd, err))
 	}
