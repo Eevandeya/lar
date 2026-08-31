@@ -7,8 +7,8 @@ import (
 )
 
 func main() {
-	cmd, err := cli.NewRootCommand().ExecuteC()
+	cmd, err := cli.NewRootCommand(os.Stdout).ExecuteC()
 	if err != nil {
-		os.Exit(cli.HandleError(cmd, err))
+		os.Exit(cli.HandleError(os.Stderr, cmd, err))
 	}
 }

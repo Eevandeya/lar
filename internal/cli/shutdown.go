@@ -1,13 +1,13 @@
 package cli
 
 import (
-	"fmt"
+	"io"
 	"log/slog"
 
 	"github.com/spf13/cobra"
 )
 
-func newShutdownCommand(getClient func() ShutdownClient) *cobra.Command {
+func newShutdownCommand(output io.Writer, getClient func() ShutdownClient) *cobra.Command {
 	return &cobra.Command{
 		Use:   "shutdown [machine]",
 		Short: "Shutdown machine using ssh",
@@ -24,7 +24,10 @@ func newShutdownCommand(getClient func() ShutdownClient) *cobra.Command {
 				return err
 			}
 
-			fmt.Printf("%s: %sshutdown successful%s\n", machineName, cyan, reset)
+			err = printShutdownSuccess(output, machineName)
+			if err != nil {
+				slog.Debug("failed to write to output:", "err", err)
+			}
 
 			return nil
 		},

@@ -1,13 +1,13 @@
 package cli
 
 import (
-	"fmt"
+	"io"
 	"log/slog"
 
 	"github.com/spf13/cobra"
 )
 
-func newStatusCommand(getClient func() StatusClient) *cobra.Command {
+func newStatusCommand(output io.Writer, getClient func() StatusClient) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "status [machine]",
 		Short: "Check machine status",
@@ -37,11 +37,11 @@ func newStatusCommand(getClient func() StatusClient) *cobra.Command {
 				return ExitCodeError(1)
 			}
 
-			if online {
-				fmt.Printf("%s: %sonline%s\n", machineName, green, reset)
-			} else {
-				fmt.Printf("%s: %soffline%s\n", machineName, red, reset)
+			err = printStatus(output, machineName, online)
+			if err != nil {
+				slog.Debug("failed to write to output:", "err", err)
 			}
+
 			return nil
 		},
 	}

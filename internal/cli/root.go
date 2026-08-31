@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"io"
 	"log/slog"
 
 	"github.com/eevandeya/lar/internal/client"
@@ -11,7 +12,7 @@ import (
 
 var debug bool
 
-func NewRootCommand() *cobra.Command {
+func NewRootCommand(output io.Writer) *cobra.Command {
 	var cfg *config.ClientConfig
 
 	cmd := &cobra.Command{
@@ -65,9 +66,9 @@ func NewRootCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		newWakeCommand(provider.WakeClient),
-		newStatusCommand(provider.StatusClient),
-		newShutdownCommand(provider.ShutdownClient),
+		newWakeCommand(output, provider.WakeClient),
+		newStatusCommand(output, provider.StatusClient),
+		newShutdownCommand(output, provider.ShutdownClient),
 	)
 
 	return cmd

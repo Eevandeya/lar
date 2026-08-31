@@ -1,13 +1,13 @@
 package cli
 
 import (
-	"fmt"
+	"io"
 	"log/slog"
 
 	"github.com/spf13/cobra"
 )
 
-func newWakeCommand(getClient func() WakeClient) *cobra.Command {
+func newWakeCommand(output io.Writer, getClient func() WakeClient) *cobra.Command {
 	return &cobra.Command{
 		Use:   "wake [machine]",
 		Short: "Wake machine using Wake-on-LAN",
@@ -24,7 +24,10 @@ func newWakeCommand(getClient func() WakeClient) *cobra.Command {
 				return err
 			}
 
-			fmt.Printf("%s: %swake request sent%s\n", machineName, blue, reset)
+			err = printWakeRequestStatus(output, machineName)
+			if err != nil {
+				slog.Debug("failed to write to output:", "err", err)
+			}
 
 			return nil
 		},
