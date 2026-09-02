@@ -1,3 +1,11 @@
+// This config loading logic should probably be refactored before we add more stuff to it.
+//
+// It kinda grew organically during development, without much of an overall plan,
+// so some parts may feel inconsistent or a bit random.
+//
+// Either refactor it properly with the bigger picture in mind, or just use
+// something like Viper.
+
 package config
 
 import (
@@ -10,6 +18,7 @@ import (
 )
 
 var ErrNilConfig = errors.New("config is nil")
+var ErrGatewayNotConfigured = errors.New("no gateway in client config")
 
 var defaultServerConfig = Server{
 	Host:      IP(net.ParseIP("0.0.0.0")),
@@ -120,6 +129,13 @@ func LoadGateway(path string) (*GatewayConfig, error) {
 	return &cfg, nil
 }
 
+func validateClientConfig(cfg ClientConfig) error {
+	if cfg.Gateway == nil {
+		return ErrGatewayNotConfigured
+	}
+	return nil
+}
+
 func LoadClient(path string) (*ClientConfig, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -129,6 +145,11 @@ func LoadClient(path string) (*ClientConfig, error) {
 	cfg := ClientConfig{}
 
 	err = yaml.Unmarshal(data, &cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	err = validateClientConfig(cfg)
 	if err != nil {
 		return nil, err
 	}

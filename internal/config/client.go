@@ -1,7 +1,7 @@
 package config
 
 type ClientConfig struct {
-	Gateway Gateway `yaml:"gateway"`
+	Gateway *Gateway `yaml:"gateway"`
 }
 
 type Gateway struct {

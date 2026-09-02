@@ -15,18 +15,20 @@ import (
 	"github.com/spf13/pflag"
 )
 
+var cobraErrorPrefixes = []string{"unknown command ", "flag needs an argument"}
+
 func isTimeout(err error) bool {
 	var netErr net.Error
 	return errors.As(err, &netErr) && netErr.Timeout()
 }
 
-func isDNSError(err error) bool {
-	var dnsError *net.DNSError
-	return errors.As(err, &dnsError)
-}
-
-func isUnknownCommand(err error) bool {
-	return strings.HasPrefix(err.Error(), "unknown command ")
+func isCobraError(err error) bool {
+	for _, prefix := range cobraErrorPrefixes {
+		if strings.HasPrefix(err.Error(), prefix) {
+			return true
+		}
+	}
+	return false
 }
 
 func HandleError(output io.Writer, cmd *cobra.Command, err error) int {
@@ -34,10 +36,10 @@ func HandleError(output io.Writer, cmd *cobra.Command, err error) int {
 
 	var apiErr client.APIError
 	var unexpectedApiErr client.UnexpectedAPIError
-	var netErr net.Error
 	var argErr *ArgumentNumberError
 	var codeErr ExitCodeError
 	var flagErr *pflag.NotExistError
+	var dnsError *net.DNSError
 
 	switch {
 	case errors.As(err, &apiErr):
@@ -67,17 +69,14 @@ func HandleError(output io.Writer, cmd *cobra.Command, err error) int {
 	case errors.As(err, &unexpectedApiErr):
 		_, _ = fmt.Fprintf(output, "%s unexpected response from gateway (HTTP %d)\n", errorPrefix, unexpectedApiErr)
 
-	case errors.As(err, &netErr):
-		switch {
-		case isDNSError(err):
-			_, _ = fmt.Fprintf(output, "%s failed to resolve gateway\n", errorPrefix)
-		case errors.Is(err, syscall.ECONNREFUSED):
-			_, _ = fmt.Fprintf(output, "%s connection to gateway was refused\n", errorPrefix)
-		case isTimeout(err):
-			_, _ = fmt.Fprintf(output, "%s connection to gateway timed out\n", errorPrefix)
-		default:
-			_, _ = fmt.Fprintf(output, "%s failed to communicate with gateway\n", errorPrefix)
-		}
+	case errors.As(err, &dnsError):
+		_, _ = fmt.Fprintf(output, "%s failed to resolve gateway\n", errorPrefix)
+
+	case errors.Is(err, syscall.ECONNREFUSED):
+		_, _ = fmt.Fprintf(output, "%s connection to gateway was refused\n", errorPrefix)
+
+	case isTimeout(err):
+		_, _ = fmt.Fprintf(output, "%s connection to gateway timed out\n", errorPrefix)
 
 	case errors.As(err, &argErr):
 		_, _ = fmt.Fprintf(output, "%s '%s' require %d args, but got %d\n\n%s\n",
@@ -86,10 +85,13 @@ func HandleError(output io.Writer, cmd *cobra.Command, err error) int {
 	case errors.Is(err, config.ErrNoConfig):
 		_, _ = fmt.Fprintf(output, "%s config was not found or passed through --config\n", errorPrefix)
 
+	case errors.Is(err, config.ErrGatewayNotConfigured):
+		_, _ = fmt.Fprintf(output, "%s gateway is not configured\n", errorPrefix)
+
 	case errors.As(err, &flagErr):
 		_, _ = fmt.Fprintf(output, "%s %s\n\n%s\n", errorPrefix, flagErr.Error(), cmd.UsageString())
 
-	case isUnknownCommand(err):
+	case isCobraError(err):
 		_, _ = fmt.Fprintf(output, "%s %s\n\n%s\n", errorPrefix, err.Error(), cmd.UsageString())
 
 	case errors.As(err, &codeErr):
