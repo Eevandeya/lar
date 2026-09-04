@@ -16,7 +16,7 @@ var ErrNoConfig = errors.New("config was not found")
 func LocateClientConfig() (string, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		return "", err
+		return "", &Error{err}
 	}
 	configDir := filepath.Join(homeDir, ".config")
 
@@ -28,7 +28,7 @@ func LocateClientConfig() (string, error) {
 			continue
 		}
 		if err != nil {
-			return "", err
+			return "", &Error{err}
 		}
 		if stat.IsDir() {
 			continue
@@ -37,5 +37,5 @@ func LocateClientConfig() (string, error) {
 		return configPath, nil
 	}
 
-	return "", ErrNoConfig
+	return "", &Error{ErrNoConfig}
 }

@@ -1,7 +1,6 @@
 package config
 
 import (
-	"errors"
 	"strings"
 )
 
@@ -46,7 +45,3 @@ func (e MissingConfigValuesErr) Error() string {
 	}
 	return "missing mandatory values in config: " + strings.Join(e, ", ")
 }
-
-var ErrInvalidIPAddress = errors.New("invalid ip address")
-var ErrUnsupportedIPVersion = errors.New("only IPv4 is supported")
-var ErrInvalidMacAddressFormat = errors.New("invalid MAC address format, only Ethernet MAC (MAC-48) can be used")

@@ -31,7 +31,7 @@ const defaultSSHPort = 22
 
 func validateRequiredValues(cfg *GatewayConfig) error {
 	if cfg == nil {
-		return ErrNilConfig
+		return &Error{ErrNilConfig}
 	}
 	var missing []string
 
@@ -101,7 +101,7 @@ func setDefaultMachineValues(machines map[string]*Machine) {
 func LoadGateway(path string) (*GatewayConfig, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, err
+		return nil, &Error{err}
 	}
 
 	cfg := GatewayConfig{
@@ -110,18 +110,18 @@ func LoadGateway(path string) (*GatewayConfig, error) {
 
 	err = yaml.Unmarshal(data, &cfg)
 	if err != nil {
-		return nil, err
+		return nil, &Error{err}
 	}
 
 	setDefaultMachineValues(cfg.Machines)
 	err = validateRequiredValues(&cfg)
 	if err != nil {
-		return nil, err
+		return nil, &Error{err}
 	}
 
 	err = validateTLSConfig(cfg.Server.TLSConfig)
 	if err != nil {
-		return nil, err
+		return nil, &Error{err}
 	}
 
 	normalizeConfig(&cfg)
@@ -139,19 +139,19 @@ func validateClientConfig(cfg ClientConfig) error {
 func LoadClient(path string) (*ClientConfig, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, err
+		return nil, &Error{err}
 	}
 
 	cfg := ClientConfig{}
 
 	err = yaml.Unmarshal(data, &cfg)
 	if err != nil {
-		return nil, err
+		return nil, &Error{err}
 	}
 
 	err = validateClientConfig(cfg)
 	if err != nil {
-		return nil, err
+		return nil, &Error{err}
 	}
 
 	return &cfg, nil

@@ -1,8 +1,13 @@
 package config
 
 import (
+	"errors"
 	"net"
 )
+
+var ErrInvalidIPAddress = errors.New("invalid ip address")
+var ErrUnsupportedIPVersion = errors.New("only IPv4 is supported")
+var ErrInvalidMacAddressFormat = errors.New("invalid MAC address format, only Ethernet MAC (MAC-48) can be used")
 
 type IP net.IP
 type MACAddr net.HardwareAddr
