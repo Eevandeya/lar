@@ -6,6 +6,18 @@ import (
 	"github.com/eevandeya/lar/internal/api"
 )
 
+type Error struct {
+	Err error
+}
+
+func (e *Error) Error() string {
+	return e.Err.Error()
+}
+
+func (e *Error) Unwrap() error {
+	return e.Err
+}
+
 type APIError struct {
 	StatusCode int
 	Code       api.ErrorCode

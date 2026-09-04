@@ -30,7 +30,8 @@ func (c *Client) requestMachine(method, target, machine string) (*http.Response,
 		if resp.Header.Get("Content-Type") == api.ApplicationJSON {
 			var errorResponse api.ErrorResponse
 			if err = json.NewDecoder(resp.Body).Decode(&errorResponse); err != nil {
-				return nil, fmt.Errorf("failed to parse error response body with code %d: %w", resp.StatusCode, err)
+				return nil, fmt.Errorf(
+					"failed to parse error response body with code %d: %w", resp.StatusCode, err)
 			}
 			defer func() {
 				_ = resp.Body.Close()
@@ -57,12 +58,13 @@ func (c *Client) requestMachine(method, target, machine string) (*http.Response,
 func (c *Client) Shutdown(machine string) error {
 	resp, err := c.requestMachine(http.MethodPost, "/shutdown", machine)
 	if err != nil {
-		return err
+		return &Error{err}
 	}
+
 	err = resp.Body.Close()
 	if err != nil {
 		slog.Debug("failed to close response body", "err", err)
-		return err
+		return &Error{err}
 	}
 	return nil
 }
@@ -70,12 +72,13 @@ func (c *Client) Shutdown(machine string) error {
 func (c *Client) Status(machine string) (bool, error) {
 	resp, err := c.requestMachine(http.MethodGet, "/status", machine)
 	if err != nil {
-		return false, err
+		return false, &Error{err}
 	}
 
 	var response api.StatusResponse
 	if err = json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		return false, err
+		slog.Debug("failed to decode status response body", "body", resp.Body, "err", err)
+		return false, &Error{err}
 	}
 
 	return response.Online, nil
@@ -84,13 +87,13 @@ func (c *Client) Status(machine string) (bool, error) {
 func (c *Client) Wake(machine string) error {
 	resp, err := c.requestMachine(http.MethodPost, "/wake", machine)
 	if err != nil {
-		return err
+		return &Error{err}
 	}
 
 	err = resp.Body.Close()
 	if err != nil {
 		slog.Debug("failed to close response body", "err", err)
-		return err
+		return &Error{err}
 	}
 	return nil
 }
