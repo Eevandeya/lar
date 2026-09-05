@@ -27,6 +27,31 @@ func getTestMac() net.HardwareAddr {
 	return mac
 }
 
+func createTestConfigByContent(t *testing.T, config string) string {
+	t.Helper()
+
+	testDir := t.TempDir()
+	configPath := filepath.Join(testDir, "config.yml")
+	t.Cleanup(func() {
+		err := os.Remove(configPath)
+		if err != nil {
+			t.Fatalf("error removing file: %v", err)
+		}
+	})
+
+	file, err := os.Create(configPath)
+	if err != nil {
+		t.Fatalf("error creating file: %v", err)
+	}
+	_, err = file.WriteString(config)
+	if err != nil {
+		t.Fatalf("error writing to file: %v", err)
+	}
+	_ = file.Close()
+
+	return configPath
+}
+
 func TestValidateRequiredValues(t *testing.T) {
 	tests := []struct {
 		name              string
@@ -373,38 +398,13 @@ func TestSetDefaultMachineValues(t *testing.T) {
 	})
 }
 
-func createTestConfigByContent(t *testing.T, config string) string {
-	t.Helper()
-
-	testDir := t.TempDir()
-	configPath := filepath.Join(testDir, "config.yml")
-	t.Cleanup(func() {
-		err := os.Remove(configPath)
-		if err != nil {
-			t.Fatalf("error removing file: %v", err)
-		}
-	})
-
-	file, err := os.Create(configPath)
-	if err != nil {
-		t.Fatalf("error creating file: %v", err)
-	}
-	_, err = file.WriteString(config)
-	if err != nil {
-		t.Fatalf("error writing to file: %v", err)
-	}
-	_ = file.Close()
-
-	return configPath
-}
-
 func TestLoadGateway(t *testing.T) {
 	t.Run("File does not exist", func(t *testing.T) {
 		testDir := t.TempDir()
 		unexistingConfigPath := filepath.Join(testDir, "config.yml")
 		_, err := LoadGateway(unexistingConfigPath)
-		if !os.IsNotExist(err) {
-			t.Fatalf("expected %v to be NotExist error", err)
+		if configErr, ok := errors.AsType[*Error](err); !ok || !os.IsNotExist(configErr.Unwrap()) {
+			t.Fatalf("expected %v to be NotExist error", configErr.Unwrap())
 		}
 	})
 
@@ -601,8 +601,8 @@ func TestLoadClient(t *testing.T) {
 		testDir := t.TempDir()
 		unexistingConfigPath := filepath.Join(testDir, "config.yml")
 		_, err := LoadClient(unexistingConfigPath)
-		if !os.IsNotExist(err) {
-			t.Fatalf("expected %v to be NotExist error", err)
+		if configErr, ok := errors.AsType[*Error](err); !ok || !os.IsNotExist(configErr.Unwrap()) {
+			t.Fatalf("expected %v to be NotExist error", configErr.Unwrap())
 		}
 	})
 
@@ -615,6 +615,15 @@ func TestLoadClient(t *testing.T) {
 		}
 	})
 
+	t.Run("No gateway in config", func(t *testing.T) {
+		config := ""
+		configPath := createTestConfigByContent(t, config)
+		_, err := LoadClient(configPath)
+		if !errors.Is(err, ErrGatewayNotConfigured) {
+			t.Fatalf("expected %v to be ErrGatewayNotConfigured", err)
+		}
+	})
+	
 	t.Run("Load valid config", func(t *testing.T) {
 		config := `
 gateway:
@@ -628,7 +637,7 @@ gateway:
 		}
 
 		wantClient := ClientConfig{
-			Gateway: Gateway{
+			Gateway: &Gateway{
 				Address: "https://lar.example.com",
 				Secret:  "secret",
 			},

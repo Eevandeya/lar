@@ -45,3 +45,15 @@ func (e MissingConfigValuesErr) Error() string {
 	}
 	return "missing mandatory values in config: " + strings.Join(e, ", ")
 }
+
+type ParseError struct {
+	Err error
+}
+
+func (e *ParseError) Error() string {
+	return e.Err.Error()
+}
+
+func (e *ParseError) Unwrap() error {
+	return e.Err
+}

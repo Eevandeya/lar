@@ -146,7 +146,7 @@ func LoadClient(path string) (*ClientConfig, error) {
 
 	err = yaml.Unmarshal(data, &cfg)
 	if err != nil {
-		return nil, &Error{err}
+		return nil, &Error{&ParseError{err}}
 	}
 
 	err = validateClientConfig(cfg)
