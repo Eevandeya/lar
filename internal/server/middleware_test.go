@@ -79,9 +79,9 @@ func TestAuthMiddleware(t *testing.T) {
 
 				require.Equal(t, api.ErrUnauthorized, errResp.Error.Code)
 				require.Equal(t, "invalid credentials", errResp.Error.Message)
-				require.Equal(t, false, calledNext)
+				require.False(t, calledNext)
 			} else {
-				require.Equal(t, true, calledNext)
+				require.True(t, calledNext)
 			}
 		})
 	}

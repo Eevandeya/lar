@@ -209,7 +209,7 @@ func TestClientStatus(t *testing.T) {
 		isOnline, err := client.Status("pc1")
 		require.NoError(t, err)
 
-		require.Equal(t, true, isOnline)
+		require.True(t, isOnline)
 	})
 }
 
