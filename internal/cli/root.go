@@ -59,6 +59,8 @@ func NewRootCommand(output io.Writer) *cobra.Command {
 	cmd.PersistentFlags().String("config", "", "specify lar config path")
 	cmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "enable debug output")
 
+	cmd.SetOut(output)
+
 	provider := MachineClientProvider{
 		getClient: func() MachineClient {
 			return client.New(cfg.Gateway.Address, cfg.Gateway.Secret)
