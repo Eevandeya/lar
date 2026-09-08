@@ -34,6 +34,10 @@ func isCobraError(err error) bool {
 	return false
 }
 
+func printError(output io.Writer, msg string) {
+	_, _ = fmt.Fprintf(output, "%s %s\n", errorPrefix, msg)
+}
+
 func handleClientError(output io.Writer, err *client.Error) {
 	var apiErr client.APIError
 	var unexpectedApiErr client.UnexpectedAPIError
@@ -43,41 +47,44 @@ func handleClientError(output io.Writer, err *client.Error) {
 	case errors.As(err, &apiErr):
 		switch apiErr.Code {
 		case api.ErrUnauthorized:
-			_, _ = fmt.Fprintf(output, "%s authentication failed\n", errorPrefix)
+			printError(output, "authentication failed")
 		case api.ErrMissingMachineName:
-			_, _ = fmt.Fprintf(output, "%s gateway did not receive machine name\n", errorPrefix)
+			printError(output, "gateway did not receive machine name")
 		case api.ErrInvalidMachineName:
 			if machineErr, ok := errors.AsType[client.MachineError](err); ok {
-				_, _ = fmt.Fprintf(output, "%s machine '%s' not found\n", errorPrefix, machineErr.MachineName)
+				printError(output, fmt.Sprintf("machine '%s' not found", machineErr.MachineName))
 			} else {
-				_, _ = fmt.Fprintf(output, "%s machine not found\n", errorPrefix)
+				printError(output, "machine not found")
 			}
 		case api.ErrInterfaceUnavailable:
-			_, _ = fmt.Fprintf(output, "%s network interface on gateway is unavailable\n", errorPrefix)
+			printError(output, "network interface on gateway is unavailable")
 		case api.ErrARPProbingFailed:
-			_, _ = fmt.Fprintf(output, "%s gateway failed to check machine status\n", errorPrefix)
+			printError(output, "gateway failed to check machine status")
 		case api.ErrWOLFailed:
-			_, _ = fmt.Fprintf(output, "%s gateway failed to send magic packet\n", errorPrefix)
+			printError(output, "gateway failed to send magic packet")
 		case api.ErrSSHFailed:
-			_, _ = fmt.Fprintf(output, "%s gateway failed to shutdown machine via ssh\n", errorPrefix)
+			printError(output, "gateway failed to shutdown machine via ssh")
 		default:
-			_, _ = fmt.Fprintf(output, "%s %s\n", errorPrefix, apiErr.Message)
+			printError(output, apiErr.Message)
 		}
 
 	case errors.As(err, &unexpectedApiErr):
-		_, _ = fmt.Fprintf(output, "%s unexpected response from gateway (HTTP %d)\n", errorPrefix, unexpectedApiErr)
+		printError(output, fmt.Sprintf("unexpected response from gateway (HTTP %d)", unexpectedApiErr))
 
 	case errors.As(err, &dnsErr):
-		_, _ = fmt.Fprintf(output, "%s failed to resolve gateway\n", errorPrefix)
+		printError(output, "failed to resolve gateway")
 
 	case errors.Is(err, syscall.ECONNREFUSED):
-		_, _ = fmt.Fprintf(output, "%s connection to gateway was refused\n", errorPrefix)
+		printError(output, "connection to gateway was refused")
+
+	case errors.Is(err, syscall.ECONNRESET):
+		printError(output, "gateway closed the connection")
 
 	case isTimeout(err):
-		_, _ = fmt.Fprintf(output, "%s connection to gateway timed out\n", errorPrefix)
+		printError(output, "connection to gateway timed out")
 
 	default:
-		_, _ = fmt.Fprintf(output, "%s client operation failed\n", errorPrefix)
+		printError(output, "client operation failed")
 	}
 }
 
@@ -86,23 +93,23 @@ func handleConfigError(output io.Writer, err *config.Error) {
 
 	switch {
 	case errors.Is(err, config.ErrNoConfig):
-		_, _ = fmt.Fprintf(output, "%s config was not found or passed through --config\n", errorPrefix)
+		printError(output, "config was not found or passed through --config")
 
 	case errors.Is(err, config.ErrGatewayNotConfigured):
-		_, _ = fmt.Fprintf(output, "%s gateway is not configured\n", errorPrefix)
+		printError(output, "gateway is not configured")
 
 	case errors.Is(err, os.ErrNotExist):
 		if pathErr, ok := errors.AsType[*os.PathError](err); ok {
-			_, _ = fmt.Fprintf(output, "%s config was not found at path '%s'\n", errorPrefix, pathErr.Path)
+			printError(output, fmt.Sprintf("config was not found at path '%s'", pathErr.Path))
 		} else {
-			_, _ = fmt.Fprintf(output, "%s config was not found\n", errorPrefix)
+			printError(output, "config was not found")
 		}
 
 	case errors.As(err, &parseErr):
-		_, _ = fmt.Fprintf(output, "%s failed to parse config\n", errorPrefix)
+		printError(output, "failed to parse config")
 
 	default:
-		_, _ = fmt.Fprintf(output, "%s config operation failed\n", errorPrefix)
+		printError(output, "config operation failed")
 	}
 }
 
@@ -126,17 +133,17 @@ func HandleError(output io.Writer, cmd *cobra.Command, err error) int {
 		return int(exitCodeErr)
 
 	case isCobraError(err):
-		_, _ = fmt.Fprintf(output, "%s %s\n\n%s\n", errorPrefix, err.Error(), cmd.UsageString())
+		printError(output, fmt.Sprintf("%s\n\n%s", err.Error(), cmd.UsageString()))
 
 	case errors.As(err, &argErr):
-		_, _ = fmt.Fprintf(output, "%s '%s' require %d args, but got %d\n\n%s\n",
-			errorPrefix, cmd.Name(), argErr.Expected, argErr.Got, cmd.UsageString())
+		printError(output, fmt.Sprintf("'%s' require %d args, but got %d\n\n%s",
+			cmd.Name(), argErr.Expected, argErr.Got, cmd.UsageString()))
 
 	case errors.As(err, &flagErr):
-		_, _ = fmt.Fprintf(output, "%s %s\n\n%s\n", errorPrefix, flagErr.Error(), cmd.UsageString())
+		printError(output, fmt.Sprintf("%s\n\n%s", flagErr.Error(), cmd.UsageString()))
 
 	default:
-		_, _ = fmt.Fprintf(output, "%s an unexpected error occurred\n", errorPrefix)
+		printError(output, "an unexpected error occurred")
 	}
 
 	return 1
