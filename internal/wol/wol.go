@@ -5,24 +5,30 @@ import (
 )
 
 const wolPort = 9
+
 const macAddressLength = 6
 const magicPacketPrefixLength = 6
 const macAddressRepeat = 16
 
+
 func Wake(macAddr net.HardwareAddr, ip net.IP) error {
+	return wake(macAddr, ip, wolPort)
+}
+
+func wake(macAddr net.HardwareAddr, ip net.IP, port uint16) error {
 
 	magicPacket := make([]byte, magicPacketPrefixLength+macAddressLength*macAddressRepeat)
 
-	for i := 0; i < magicPacketPrefixLength; i++ {
+	for i := range magicPacketPrefixLength {
 		magicPacket[i] = 0xFF
 	}
-	for i := 0; i < macAddressLength*macAddressRepeat; i++ {
+	for i := range macAddressLength*macAddressRepeat {
 		magicPacket[magicPacketPrefixLength+i] = macAddr[i%macAddressLength]
 	}
 
 	addr := net.UDPAddr{
 		IP:   ip,
-		Port: wolPort,
+		Port: int(port),
 	}
 
 	conn, err := net.DialUDP("udp", nil, &addr)
@@ -31,6 +37,7 @@ func Wake(macAddr net.HardwareAddr, ip net.IP) error {
 	}
 	defer func() {
 		_ = conn.Close() // escaping goland checks
+						 // TODO: get rid of those escapes in project
 	}()
 
 	_, err = conn.Write(magicPacket)
