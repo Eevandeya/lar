@@ -2,24 +2,25 @@ package arp
 
 import (
 	"errors"
-	"fmt"
 	"net"
 	"net/netip"
 	"slices"
 	"time"
-
-	"github.com/mdlayher/arp"
 )
 
 const readTimeout = 300
 
 func Probe(macAddr net.HardwareAddr, machineIP net.IP, ifi *net.Interface) (bool, error) {
+	return probe(macAddr, machineIP, ifi, ClientProvider(NewMdlayherClient))
+}
+
+func probe(macAddr net.HardwareAddr, machineIP net.IP, ifi *net.Interface, provider ClientProvider) (bool, error) {
 	machineIP = machineIP.To4()
 	if machineIP == nil {
 		return false, errors.New("machine IP is not IPv4")
 	}
 
-	arpClient, err := arp.Dial(ifi)
+	arpClient, err := provider(ifi)
 	if err != nil {
 		return false, err
 	}
@@ -27,10 +28,8 @@ func Probe(macAddr net.HardwareAddr, machineIP net.IP, ifi *net.Interface) (bool
 		_ = arpClient.Close()
 	}()
 
-	addr, ok := netip.AddrFromSlice(machineIP) // mdlayher/arp uses netip.Addr instead of net.IP
-	if !ok {
-		return false, fmt.Errorf("invalid IPv4 address: %v", machineIP)
-	}
+	// To4() above guarantees that machineIP is a valid IPv4 address
+	addr, _ := netip.AddrFromSlice(machineIP)
 
 	err = arpClient.Request(addr)
 	if err != nil {
@@ -43,7 +42,7 @@ func Probe(macAddr net.HardwareAddr, machineIP net.IP, ifi *net.Interface) (bool
 	}
 
 	for {
-		packet, _, err := arpClient.Read()
+		packet, err := arpClient.Read()
 		if err != nil {
 			var netError net.Error
 			if errors.As(err, &netError) && netError.Timeout() {
@@ -53,7 +52,7 @@ func Probe(macAddr net.HardwareAddr, machineIP net.IP, ifi *net.Interface) (bool
 			return false, err
 		}
 
-		if packet.Operation != arp.OperationReply {
+		if packet.Operation != OperationReply {
 			continue
 		}
 		if packet.SenderIP.Compare(addr) != 0 {
