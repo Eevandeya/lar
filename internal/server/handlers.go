@@ -75,7 +75,6 @@ func (s *Server) statusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	return
 }
 
 func (s *Server) wakeHandler(w http.ResponseWriter, r *http.Request) {
@@ -95,7 +94,6 @@ func (s *Server) wakeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusAccepted)
-	return
 }
 
 func (s *Server) shutdownHandler(w http.ResponseWriter, r *http.Request) {
@@ -115,5 +113,4 @@ func (s *Server) shutdownHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	return
 }
