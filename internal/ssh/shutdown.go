@@ -4,42 +4,22 @@ import (
 	"net"
 	"os"
 	"strconv"
-
-	"golang.org/x/crypto/ssh"
 )
 
 const poweroffCmd = "sudo poweroff"
 
-func loadSigner(keyPath string) (ssh.Signer, error) {
-	key, err := os.ReadFile(keyPath)
-	if err != nil {
-		return nil, err
-	}
-
-	signer, err := ssh.ParsePrivateKey(key)
-	if err != nil {
-		return nil, err
-	}
-
-	return signer, nil
+func Shutdown(user, keyPath string, machineIP net.IP, sshPort uint16) error {
+	return shutdown(user, keyPath, machineIP, sshPort, ClientProvider(NewSSHClient))
 }
 
-func Shutdown(user, keyPath string, machineIP net.IP, sshPort uint16) error {
-	signer, err := loadSigner(keyPath)
+func shutdown(user, keyPath string, machineIP net.IP, sshPort uint16, provider ClientProvider) error {
+	key, err := os.ReadFile(keyPath)
 	if err != nil {
 		return err
 	}
 
-	config := &ssh.ClientConfig{
-		User: user,
-		Auth: []ssh.AuthMethod{
-			ssh.PublicKeys(signer),
-		},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // TODO: figure it out
-	}
-
 	addr := net.JoinHostPort(machineIP.String(), strconv.FormatUint(uint64(sshPort), 10))
-	client, err := ssh.Dial("tcp", addr, config)
+	client, err := provider(addr, user, key)
 	if err != nil {
 		return err
 	}
