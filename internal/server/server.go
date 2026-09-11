@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"errors"
 	"log/slog"
 	"net"
@@ -8,7 +9,10 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/eevandeya/lar/internal/arp"
 	"github.com/eevandeya/lar/internal/config"
+	"github.com/eevandeya/lar/internal/ssh"
+	"github.com/eevandeya/lar/internal/wol"
 )
 
 const (
@@ -17,26 +21,39 @@ const (
 	maxHeaderBytes = 1 << 20
 )
 
+type Dependencies struct {
+	InterfaceByName func(name string) (*net.Interface, error)
+	ArpProbe        func(macAddr net.HardwareAddr, machineIP net.IP, ifi *net.Interface) (bool, error)
+	Wake            func(macAddr net.HardwareAddr, ip net.IP) error
+	Shutdown        func(user string, keyPath string, machineIP net.IP, sshPort uint16) error
+}
+
 type Server struct {
-	cfg *config.GatewayConfig
-	mux *http.ServeMux
+	cfg  *config.GatewayConfig
+	mux  *http.ServeMux
+	deps Dependencies
+	http *http.Server
 }
 
-func NewServer(cfg *config.GatewayConfig) *Server {
+func NewServerWithDependencies(cfg *config.GatewayConfig) *Server {
+	return NewServer(cfg, Dependencies{
+		InterfaceByName: net.InterfaceByName,
+		ArpProbe:        arp.Probe,
+		Wake:            wol.Wake,
+		Shutdown:        ssh.Shutdown,
+	})
+}
+
+func NewServer(cfg *config.GatewayConfig, deps Dependencies) *Server {
 	s := Server{
-		cfg: cfg,
-		mux: http.NewServeMux(),
+		cfg:  cfg,
+		mux:  http.NewServeMux(),
+		deps: deps,
 	}
-	s.mux.HandleFunc("GET /status", s.statusHandler)
-	s.mux.HandleFunc("POST /wake", s.wakeHandler)
-	s.mux.HandleFunc("POST /shutdown", s.shutdownHandler)
-	return &s
-}
 
-func (s *Server) ListenAndServe(useHTTP bool) error {
 	handler := loggingMiddleware(slog.Default(), s.authMiddleware(s.mux))
 
-	server := &http.Server{
+	httpServer := &http.Server{
 		Addr: net.JoinHostPort(
 			net.IP(s.cfg.Server.Host).String(),
 			strconv.FormatUint(uint64(s.cfg.Server.Port), 10)),
@@ -46,14 +63,32 @@ func (s *Server) ListenAndServe(useHTTP bool) error {
 		MaxHeaderBytes: maxHeaderBytes,
 	}
 
+	s.http = httpServer
+
+	s.mux.HandleFunc("GET /status", s.statusHandler)
+	s.mux.HandleFunc("POST /wake", s.wakeHandler)
+	s.mux.HandleFunc("POST /shutdown", s.shutdownHandler)
+
+	return &s
+}
+
+func (s *Server) Serve(listener net.Listener) error {
+	return s.http.Serve(listener)
+}
+
+func (s *Server) Shutdown(ctx context.Context) error {
+	return s.http.Shutdown(ctx)
+}
+
+func (s *Server) ListenAndServe(useHTTP bool) error {
 	if useHTTP {
 		slog.Warn("Using unencrypted HTTP." +
 			"Traffic is not encrypted and may be intercepted.")
-		return server.ListenAndServe()
+		return s.http.ListenAndServe()
 	}
 
 	if s.cfg.Server.TLSConfig != nil {
-		return server.ListenAndServeTLS(
+		return s.http.ListenAndServeTLS(
 			s.cfg.Server.TLSConfig.CertificateFilePath,
 			s.cfg.Server.TLSConfig.KeyFilePath)
 	}

@@ -52,7 +52,7 @@ func TestNewShutdownCommand(t *testing.T) {
 				})
 			},
 			args:       []string{"foo"},
-			wantOutput: new(fmt.Sprintf("foo: %sshutdown successful%s\n", cyan, reset)),
+			wantOutput: new(fmt.Sprintf("foo: %sshutdown successful%s\n", Cyan, Reset)),
 		},
 	}
 

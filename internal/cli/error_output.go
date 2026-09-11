@@ -17,7 +17,7 @@ import (
 	"github.com/spf13/pflag"
 )
 
-var errorPrefix = fmt.Sprintf("%sError:%s", red, reset)
+var errorPrefix = fmt.Sprintf("%sError:%s", Red, Reset)
 var cobraErrorPrefixes = []string{"unknown command ", "flag needs an argument"}
 
 func isTimeout(err error) bool {

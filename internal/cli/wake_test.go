@@ -52,7 +52,7 @@ func TestNewWakeCommand(t *testing.T) {
 				})
 			},
 			args:       []string{"foo"},
-			wantOutput: new(fmt.Sprintf("foo: %swake request sent%s\n", blue, reset)),
+			wantOutput: new(fmt.Sprintf("foo: %swake request sent%s\n", Blue, Reset)),
 		},
 	}
 

@@ -91,7 +91,7 @@ func main() {
 		return
 	}
 
-	s := server.NewServer(cfg)
+	s := server.NewServerWithDependencies(cfg)
 	slog.Info("starting server", "port", cfg.Server.Port)
 	if err = s.ListenAndServe(*useHTTP); err != nil {
 		slog.Error("server stopped", "error", err)

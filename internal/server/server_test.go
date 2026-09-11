@@ -8,7 +8,7 @@ import (
 )
 
 func TestServerListenAndServeNoTLSConfig(t *testing.T) {
-	s := NewServer(&config.GatewayConfig{})
+	s := NewServerWithDependencies(&config.GatewayConfig{})
 
 	err := s.ListenAndServe(false)
 

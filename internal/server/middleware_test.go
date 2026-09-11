@@ -60,7 +60,7 @@ func TestAuthMiddleware(t *testing.T) {
 					Secret: secret,
 				},
 			}
-			s := NewServer(&cfg)
+			s := NewServerWithDependencies(&cfg)
 
 			rec := httptest.NewRecorder()
 

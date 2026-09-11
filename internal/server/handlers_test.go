@@ -47,19 +47,22 @@ func requireAPIError(t *testing.T, expected *api.Error, actualJSON io.Reader) {
 	require.Equal(t, expected.Message, actual.Error.Message)
 }
 
-func getServerWithMachine(machineName string) *Server {
-	return &Server{cfg: &config.GatewayConfig{
-		Server: config.Server{
-			Broadcast:        testBroadcastIP,
-			ARPInterfaceName: testInterfaceName,
-		},
-		Machines: map[string]*config.Machine{
-			machineName: {
-				MAC:     testMACAddr,
-				Address: testIPAddr,
+func getServerWithMachine(machineName string, deps Dependencies) *Server {
+	return &Server{
+		cfg: &config.GatewayConfig{
+			Server: config.Server{
+				Broadcast:        testBroadcastIP,
+				ARPInterfaceName: testInterfaceName,
+			},
+			Machines: map[string]*config.Machine{
+				machineName: {
+					MAC:     testMACAddr,
+					Address: testIPAddr,
+				},
 			},
 		},
-	}}
+		deps: deps,
+	}
 }
 
 func getRequestWithMachine(t *testing.T, machineName, method string) *http.Request {
@@ -211,20 +214,15 @@ func TestServerStatusHandler(t *testing.T) {
 		},
 	}
 
-	oldInterfaceByName := interfaceByName
-	oldArpProbe := arpProbe
-	t.Cleanup(func() {
-		interfaceByName = oldInterfaceByName
-		arpProbe = oldArpProbe
-	})
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			interfaceByName = tt.interfaceByNameFunc
-			arpProbe = tt.arpProbeFunc
+			deps := Dependencies{
+				InterfaceByName: tt.interfaceByNameFunc,
+				ArpProbe:        tt.arpProbeFunc,
+			}
 
 			rec := httptest.NewRecorder()
-			s := getServerWithMachine(testMachineName)
+			s := getServerWithMachine(testMachineName, deps)
 			req := getRequestWithMachine(t, tt.machineName, http.MethodGet)
 
 			s.statusHandler(rec, req)
@@ -290,17 +288,14 @@ func TestServerWakeHandler(t *testing.T) {
 		},
 	}
 
-	oldWake := wake
-	t.Cleanup(func() {
-		wake = oldWake
-	})
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			wake = tt.wakeFunc
+			deps := Dependencies{
+				Wake: tt.wakeFunc,
+			}
 
 			rec := httptest.NewRecorder()
-			s := getServerWithMachine(testMachineName)
+			s := getServerWithMachine(testMachineName, deps)
 			req := getRequestWithMachine(t, tt.machineName, http.MethodPost)
 
 			s.wakeHandler(rec, req)
@@ -357,17 +352,14 @@ func TestServerShutdownHandler(t *testing.T) {
 		},
 	}
 
-	oldShutdown := shutdown
-	t.Cleanup(func() {
-		shutdown = oldShutdown
-	})
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			shutdown = tt.shutdownFunc
+			deps := Dependencies{
+				Shutdown: tt.shutdownFunc,
+			}
 
 			rec := httptest.NewRecorder()
-			s := getServerWithMachine(testMachineName)
+			s := getServerWithMachine(testMachineName, deps)
 			req := getRequestWithMachine(t, tt.machineName, http.MethodPost)
 
 			s.shutdownHandler(rec, req)

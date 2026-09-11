@@ -75,7 +75,7 @@ func TestNewStatusCommand(t *testing.T) {
 				})
 			},
 			args:       []string{"foo"},
-			wantOutput: new(fmt.Sprintf("foo: %sonline%s\n", green, reset)),
+			wantOutput: new(fmt.Sprintf("foo: %sonline%s\n", Green, Reset)),
 		},
 		{
 			name: "Success offline",
@@ -86,7 +86,7 @@ func TestNewStatusCommand(t *testing.T) {
 				})
 			},
 			args:       []string{"foo"},
-			wantOutput: new(fmt.Sprintf("foo: %soffline%s\n", red, reset)),
+			wantOutput: new(fmt.Sprintf("foo: %soffline%s\n", Red, Reset)),
 		},
 	}
 

@@ -6,31 +6,31 @@ import (
 )
 
 const (
-	green = "\033[32m"
-	red   = "\033[31m"
-	cyan  = "\033[36m"
-	blue  = "\033[34m"
-	reset = "\033[0m"
+	Green = "\033[32m"
+	Red   = "\033[31m"
+	Cyan  = "\033[36m"
+	Blue  = "\033[34m"
+	Reset = "\033[0m"
 )
 
 func printStatus(output io.Writer, machine string, online bool) error {
 	var err error
 
 	if online {
-		_, err = fmt.Fprintf(output, "%s: %sonline%s\n", machine, green, reset)
+		_, err = fmt.Fprintf(output, "%s: %sonline%s\n", machine, Green, Reset)
 	} else {
-		_, err = fmt.Fprintf(output, "%s: %soffline%s\n", machine, red, reset)
+		_, err = fmt.Fprintf(output, "%s: %soffline%s\n", machine, Red, Reset)
 	}
 
 	return err
 }
 
 func printShutdownSuccess(output io.Writer, machine string) error {
-	_, err := fmt.Fprintf(output, "%s: %sshutdown successful%s\n", machine, cyan, reset)
+	_, err := fmt.Fprintf(output, "%s: %sshutdown successful%s\n", machine, Cyan, Reset)
 	return err
 }
 
 func printWakeRequestStatus(output io.Writer, machine string) error {
-	_, err := fmt.Fprintf(output, "%s: %swake request sent%s\n", machine, blue, reset)
+	_, err := fmt.Fprintf(output, "%s: %swake request sent%s\n", machine, Blue, Reset)
 	return err
 }
