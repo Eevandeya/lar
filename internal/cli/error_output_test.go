@@ -24,18 +24,18 @@ func (timeoutError) Temporary() bool { return true }
 
 func TestIsCobraError(t *testing.T) {
 	tests := []struct {
-		name      string
-		err       error
+		name       string
+		err        error
 		wantOutput bool
 	}{
 		{
-			name:      "Cobra error",
-			err:       errors.New("flag needs an argument: --config"),
+			name:       "Cobra error",
+			err:        errors.New("flag needs an argument: --config"),
 			wantOutput: true,
 		},
 		{
-			name:      "Not a cobra error",
-			err:       errors.New("foo"),
+			name:       "Not a cobra error",
+			err:        errors.New("foo"),
 			wantOutput: false,
 		},
 	}

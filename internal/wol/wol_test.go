@@ -26,7 +26,7 @@ func TestWake(t *testing.T) {
 		buf := make([]byte, 1024)
 
 		listener.SetReadDeadline(time.Now().Add(time.Second))
-		
+
 		n, _, err := listener.ReadFromUDP(buf)
 
 		if err != nil {
@@ -48,7 +48,7 @@ func TestWake(t *testing.T) {
 		require.Len(t, packet, 6+6*16)
 		require.Equal(t, []byte{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}, packet[:6])
 
-		for i := range 6*16 {
+		for i := range 6 * 16 {
 			require.Equal(t, mac[i%6], packet[6+i])
 		}
 	}

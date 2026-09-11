@@ -623,7 +623,7 @@ func TestLoadClient(t *testing.T) {
 			t.Fatalf("expected %v to be ErrGatewayNotConfigured", err)
 		}
 	})
-	
+
 	t.Run("Load valid config", func(t *testing.T) {
 		config := `
 gateway:

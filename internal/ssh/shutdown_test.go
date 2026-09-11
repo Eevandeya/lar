@@ -83,7 +83,7 @@ func TestShutdown(t *testing.T) {
 		provider := ClientProvider(func(addr, user string, key []byte) (Client, error) {
 			require.Equal(t, expectedAddr, addr)
 			require.Equal(t, testUser, user)
-			require.Equal(t,  []byte(testKey), key)
+			require.Equal(t, []byte(testKey), key)
 			return nil, errors.New("foo")
 		})
 
@@ -103,7 +103,7 @@ func TestShutdown(t *testing.T) {
 		provider := ClientProvider(func(addr, user string, key []byte) (Client, error) {
 			require.Equal(t, expectedAddr, addr)
 			require.Equal(t, testUser, user)
-			require.Equal(t,  []byte(testKey), key)
+			require.Equal(t, []byte(testKey), key)
 			return client, nil
 		})
 
@@ -131,7 +131,7 @@ func TestShutdown(t *testing.T) {
 		provider := ClientProvider(func(addr, user string, key []byte) (Client, error) {
 			require.Equal(t, expectedAddr, addr)
 			require.Equal(t, testUser, user)
-			require.Equal(t,  []byte(testKey), key)
+			require.Equal(t, []byte(testKey), key)
 			return client, nil
 		})
 
@@ -160,7 +160,7 @@ func TestShutdown(t *testing.T) {
 		provider := ClientProvider(func(addr, user string, key []byte) (Client, error) {
 			require.Equal(t, expectedAddr, addr)
 			require.Equal(t, testUser, user)
-			require.Equal(t,  []byte(testKey), key)
+			require.Equal(t, []byte(testKey), key)
 			return client, nil
 		})
 

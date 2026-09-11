@@ -81,10 +81,10 @@ func TestNewRootCommand_Imperative(t *testing.T) {
 	})
 
 	t.Run("Debug set by flag", func(t *testing.T) {
-		t.Cleanup(func(){
+		t.Cleanup(func() {
 			debug = false
 		})
-		
+
 		cfg := "gateway:\n  address: https://lar.example.com\n  secret: secret\n"
 		var buf bytes.Buffer
 		cmd := NewRootCommand(&buf)
@@ -136,7 +136,7 @@ func TestNewRootCommand_Imperative(t *testing.T) {
 
 	t.Run("Subcommands are registered", func(t *testing.T) {
 		cmd := NewRootCommand(io.Discard)
-	
+
 		tests := []struct {
 			name string
 		}{
@@ -144,11 +144,11 @@ func TestNewRootCommand_Imperative(t *testing.T) {
 			{name: "status"},
 			{name: "shutdown"},
 		}
-	
+
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
 				subcommand, _, err := cmd.Find([]string{tt.name})
-	
+
 				require.NoError(t, err)
 				require.Equal(t, tt.name, subcommand.Name())
 			})
