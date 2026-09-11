@@ -1,0 +1,14 @@
+server:
+  host: 127.0.0.1
+  port: 0
+  broadcast: 192.168.1.255
+  secret: secret
+  arp-interface: eth0
+
+machines:
+  pc1:
+    user: user
+    address: 192.168.1.23
+    identity-file: path/to/file
+    mac: 00:1A:2B:3C:4D:5E
+    ssh-port: 22
