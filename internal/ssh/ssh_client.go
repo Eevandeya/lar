@@ -7,11 +7,12 @@ type sshClient struct {
 }
 
 func (c sshClient) Close() error {
-	return c.Close()
+	return c.client.Close()
 }
 
+// TODO: probably should test it...
 func (c sshClient) NewSession() (Session, error) {
-	session, err := c.NewSession()
+	session, err := c.client.NewSession()
 	if err != nil {
 		return nil, err
 	}

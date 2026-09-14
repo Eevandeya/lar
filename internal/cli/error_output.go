@@ -44,6 +44,8 @@ func handleClientError(output io.Writer, err *client.Error) {
 	var dnsErr *net.DNSError
 
 	switch {
+	// TODO: Post \"https://lar.eevandeya.me/shutdown?machine=thinkpad\": stream error:
+	// stream ID 1; INTERNAL_ERROR; received from peer
 	case errors.As(err, &apiErr):
 		switch apiErr.Code {
 		case api.ErrUnauthorized:
