@@ -1,0 +1,158 @@
+name: Release
+
+permissions:
+  contents: write
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Test
+        run: go test ./... -v
+
+  build:
+    needs: prepare
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        include:
+          - path: ./cmd/lar
+            goos: linux
+            goarch: amd64
+            file_name: lar-${{ github.ref_name }}-linux-amd64
+            binary_name: lar
+
+          - path: ./cmd/lar
+            goos: linux
+            goarch: arm64
+            file_name: lar-${{ github.ref_name }}-linux-arm64
+            binary_name: lar
+
+          - path: ./cmd/lar
+            goos: darwin
+            goarch: amd64
+            file_name: lar-${{ github.ref_name }}-darwin-amd64
+            binary_name: lar
+
+          - path: ./cmd/lar
+            goos: darwin
+            goarch: arm64
+            file_name: lar-${{ github.ref_name }}-darwin-arm64
+            binary_name: lar
+
+          - path: ./cmd/lar
+            goos: windows
+            goarch: amd64
+            file_name: lar-${{ github.ref_name }}-windows-amd64
+            binary_name: lar.exe
+
+          - path: ./cmd/lar
+            goos: windows
+            goarch: arm64
+            file_name: lar-${{ github.ref_name }}-windows-arm64
+            binary_name: lar.exe
+
+          - path: ./cmd/lar-gateway
+            goos: linux
+            goarch: amd64
+            file_name: lar-gateway-${{ github.ref_name }}-linux-amd64
+            binary_name: lar-gateway
+
+          - path: ./cmd/lar-gateway
+            goos: linux
+            goarch: arm64
+            file_name: lar-gateway-${{ github.ref_name }}-linux-arm64
+            binary_name: lar-gateway
+
+          - path: ./cmd/lar-gateway
+            goos: linux
+            goarch: arm
+            goarm: 6
+            file_name: lar-gateway-${{ github.ref_name }}-linux-armv6
+            binary_name: lar-gateway
+
+          - path: ./cmd/lar-gateway
+            goos: linux
+            goarch: arm
+            goarm: 7
+            file_name: lar-gateway-${{ github.ref_name }}-linux-armv7
+            binary_name: lar-gateway
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+
+      - name: Build
+        run: go build -trimpath -o "${{ matrix.binary_name }}" "${{ matrix.path }}"
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          GOARM: ${{ matrix.goarm }}
+
+      - name: Create archive
+        run: |
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            FILE_NAME="${{ matrix.file_name }}.zip"
+            zip "$FILE_NAME" "${{ matrix.binary_name }}"
+          else
+            FILE_NAME="${{ matrix.file_name }}.tar.gz"
+            tar -czf "$FILE_NAME" "${{ matrix.binary_name }}"
+          fi
+
+          rm "${{ matrix.binary_name }}"
+          echo "FILE_NAME=$FILE_NAME" >> "$GITHUB_ENV"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.file_name }}
+          path: ${{ env.FILE_NAME }}
+
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v8
+        with:
+          pattern: lar-*
+          merge-multiple: true
+          path: dist/
+
+      - name: Calculate sha256 sums
+        run: sha256sum dist/*.tar.gz dist/*.zip > checksums.txt
+
+      - name: Publish release files
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+            if gh release view "${{ github.ref_name }}" > /dev/null 2>&1; then
+              gh release upload "${{ github.ref_name }}" dist/* checksums.txt --clobber
+            else
+              gh release create "${{ github.ref_name }}" dist/* checksums.txt
+            fi
