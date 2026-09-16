@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -eu
+set -euo pipefail
 
 BINARY_TMP=
 SERVICE_TMP=
@@ -11,6 +11,9 @@ BINARY_DIR=/usr/local/bin
 BINARY_NAME=lar-gateway
 SYSTEMD_UNIT_NAME=lar-gateway.service
 SYSTEMD_UNIT_PATH=systemd/${SYSTEMD_UNIT_NAME}
+CONFIG_DIR=/etc/lar-gateway
+
+NO_SERVICE=false
 
 RED=$'\033[0;31m'
 GREEN=$'\033[0;32m'
@@ -21,6 +24,35 @@ info() { printf "%s[INFO]%s %s\n" "$GREEN" "$RESET" "$*"; }
 warn() { printf "%s[WARN]%s %s\n" "$YELLOW" "$RESET" "$*"; }
 error() { printf "%s[ERROR]%s %s\n" "$RED" "$RESET" "$*"; }
 
+usage() {
+	cat <<EOF
+Usage: $0 [OPTION]
+Options:
+  --no-service    Install lar-gateway without installing the systemd service.
+  --help          Show this help message.
+EOF
+}
+
+parse_args() {
+	while [ "$#" -gt 0 ]; do
+		case "$1" in
+		--no-service)
+			NO_SERVICE=true
+			;;
+		--help)
+			usage
+			exit 0
+			;;
+		*)
+			error "unknown option: $1"
+			exit 1
+			;;
+		esac
+
+		shift
+	done
+}
+
 check_root() {
 	if [ "$(id -u)" -ne "0" ]; then
 		error "This script must be run as root. Try again with sudo."
@@ -29,37 +61,40 @@ check_root() {
 }
 
 check_os() {
-	OS=$(uname -s)
-	info "os: $OS"
+	local os
+	os=$(uname -s)
+	info "os: $os"
 
-	case "$OS" in
-	"Linux")
+	case "$os" in
+	Linux)
 		;;
 	*)
-		error "$OS is currently unsupported by lar-gateway"
+		error "$os is currently unsupported by lar-gateway"
 		exit 1
 		;;
 	esac
 }
 
 check_architecture() {
-	MACHINE=$(uname -m)
+	local machine
 
-	case "$MACHINE" in
-	"x86_64" | "amd64")
+	machine=$(uname -m)
+
+	case "$machine" in
+	x86_64 | amd64)
 		ARCH="amd64"
 		;;
-	"aarch64" | "arm64")
+	aarch64 | arm64)
 		ARCH="arm64"
 		;;
-	"armv7l")
+	armv7l)
 		ARCH="armv7"
 		;;
-	"armv6l")
+	armv6l)
 		ARCH="armv6"
 		;;
 	*)
-		error "$MACHINE architecture is unsupported by lar-gateway"
+		error "$machine architecture is unsupported by lar-gateway"
 		exit 1
 		;;
 	esac
@@ -68,12 +103,23 @@ check_architecture() {
 }
 
 check_dependencies() {
-	for command in curl systemctl tar useradd mktemp rm sed; do
+	local command
+
+	for command in "$@"; do
 		if ! command -v "$command" >/dev/null 2>&1; then
 			error "script requires ${command}"
 			exit 1
 		fi
 	done
+}
+
+create_config_dir() {
+	info "creating configuration directory"
+	mkdir -p "$CONFIG_DIR"
+
+	if [ "$NO_SERVICE" = "false" ]; then
+		chown "$LAR_USER:$LAR_USER" "$CONFIG_DIR"
+	fi
 }
 
 create_user() {
@@ -100,12 +146,14 @@ get_latest_version() {
 }
 
 download_binary() {
+	local asset download_url
+	asset="lar-gateway-${VERSION}-linux-${ARCH}.tar.gz"
+	download_url="https://github.com/${GITHUB_REPO}/releases/latest/download/${asset}"
+
 	BINARY_TMP=$(mktemp)
-	ASSET="lar-gateway-${VERSION}-linux-${ARCH}.tar.gz"
-	DOWNLOAD_URL="https://github.com/${GITHUB_REPO}/releases/latest/download/${ASSET}"
 
 	info "downloading lar-gateway binary $VERSION for target architecture..."
-	if curl -fsSL "$DOWNLOAD_URL" -o "$BINARY_TMP"; then
+	if curl -fsSL "$download_url" -o "$BINARY_TMP"; then
 		info "binary download successful"
 	else
 		error "error downloading lar-gateway binary"
@@ -114,25 +162,29 @@ download_binary() {
 }
 
 install_binary() {
+	local binary_path
+
 	info "installing lar-gateway binary..."
-	BINARY_PATH="${BINARY_DIR}/${BINARY_NAME}"
+	binary_path="${BINARY_DIR}/${BINARY_NAME}"
 	tar -xzf "$BINARY_TMP" -C "$BINARY_DIR"
 
-	if [ ! -f "$BINARY_PATH" ]; then
+	if [ ! -f "$binary_path" ]; then
 		error "binary was not found after extraction"
 		exit 1
 	fi
 
-	chmod +x "$BINARY_PATH"
+	chmod +x "$binary_path"
 	info "lar-gateway binary installed in ${BINARY_DIR}"
 }
 
 download_systemd_service() {
+	local download_url
+
 	SERVICE_TMP=$(mktemp)
-	DOWNLOAD_URL=https://raw.githubusercontent.com/${GITHUB_REPO}/${VERSION}/${SYSTEMD_UNIT_PATH}
+	download_url="https://raw.githubusercontent.com/${GITHUB_REPO}/${VERSION}/${SYSTEMD_UNIT_PATH}"
 
 	info "downloading lar-gateway service unit..."
-	if curl -fsSL "$DOWNLOAD_URL" -o "$SERVICE_TMP"; then
+	if curl -fsSL "$download_url" -o "$SERVICE_TMP"; then
 		info "systemd service unit download successful"
 	else
 		error "error downloading lar-gateway systemd service unit"
@@ -155,35 +207,65 @@ cleanup() {
 print_header() {
 	printf "lar-gateway installer\n"
 	printf "=====================\n\n"
-	printf "This script installs lar-gateway as a systemd service.\n"
-	printf "The service will not be started automatically.\n\n"
 }
 
 print_success_message() {
 	printf "\n${GREEN}lar-gateway installation completed.${RESET}\n\n"
-	printf "The service has not been started yet.\n"
-	printf "It cannot start until its configuration file is created.\n\n"
-	printf "Create the configuration file at:\n"
-	printf "    /etc/lar-gateway/config.yml\n\n"
-	printf "Then start the service with:\n"
-	printf "    sudo systemctl start ${SYSTEMD_UNIT_NAME}\n\n"
 }
 
 main() {
 	trap cleanup EXIT
 
-	print_header
-	check_root
-	check_os
-	check_architecture
-	check_dependencies
-	create_user
-	get_latest_version
-	download_binary
-	install_binary
-	download_systemd_service
-	install_systemd_service
-	print_success_message
+	parse_args "$@"
+
+	if [ "$NO_SERVICE" = "true" ]; then
+		print_header
+
+		printf "Only lar-gateway binary will be installed.\n\n"
+
+		check_root
+		check_os
+		check_architecture
+		check_dependencies curl tar mktemp rm sed
+
+		create_config_dir
+		get_latest_version
+		download_binary
+		install_binary
+
+		print_success_message
+
+		printf "\nOnly the lar-gateway binary was installed.\n"
+		printf "For systemd service use this script without --no-service flag.\n\n"
+		printf "Before lar-gateway start, create the configuration file at:\n"
+		printf "    ${CONFIG_DIR}/config.yml\n\n"
+	else
+		print_header
+		printf "lar-gateway will be installed as a systemd service.\n"
+		printf "The service will not be started automatically.\n\n"
+
+		check_root
+		check_os
+		check_architecture
+		check_dependencies curl systemctl tar useradd mktemp rm sed
+
+		create_config_dir
+		create_user
+		get_latest_version
+		download_binary
+		install_binary
+		download_systemd_service
+		install_systemd_service
+
+		print_success_message
+
+		printf "The service has not been started yet.\n"
+		printf "It cannot start until its configuration file is created.\n\n"
+		printf "Create the configuration file at:\n"
+		printf "    ${CONFIG_DIR}/config.yml\n\n"
+		printf "Then start the service with:\n"
+		printf "    sudo systemctl start ${SYSTEMD_UNIT_NAME}\n\n"
+	fi
 }
 
 main "$@"
