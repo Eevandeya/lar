@@ -8,6 +8,16 @@ on:
     tags:
       - "v*.*.*"
 
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to release"
+        required: true
+        type: string
+
+env:
+  TAG: ${{ inputs.tag || github.ref_name }}
+
 jobs:
   prepare:
     runs-on: ubuntu-latest
@@ -34,63 +44,63 @@ jobs:
           - path: ./cmd/lar
             goos: linux
             goarch: amd64
-            file_name: lar-${{ github.ref_name }}-linux-amd64
+            file_name: lar-${{ env.TAG }}-linux-amd64
             binary_name: lar
 
           - path: ./cmd/lar
             goos: linux
             goarch: arm64
-            file_name: lar-${{ github.ref_name }}-linux-arm64
+            file_name: lar-${{ env.TAG }}-linux-arm64
             binary_name: lar
 
           - path: ./cmd/lar
             goos: darwin
             goarch: amd64
-            file_name: lar-${{ github.ref_name }}-darwin-amd64
+            file_name: lar-${{ env.TAG }}-darwin-amd64
             binary_name: lar
 
           - path: ./cmd/lar
             goos: darwin
             goarch: arm64
-            file_name: lar-${{ github.ref_name }}-darwin-arm64
+            file_name: lar-${{ env.TAG }}-darwin-arm64
             binary_name: lar
 
           - path: ./cmd/lar
             goos: windows
             goarch: amd64
-            file_name: lar-${{ github.ref_name }}-windows-amd64
+            file_name: lar-${{ env.TAG }}-windows-amd64
             binary_name: lar.exe
 
           - path: ./cmd/lar
             goos: windows
             goarch: arm64
-            file_name: lar-${{ github.ref_name }}-windows-arm64
+            file_name: lar-${{ env.TAG }}-windows-arm64
             binary_name: lar.exe
 
           - path: ./cmd/lar-gateway
             goos: linux
             goarch: amd64
-            file_name: lar-gateway-${{ github.ref_name }}-linux-amd64
+            file_name: lar-gateway-${{ env.TAG }}-linux-amd64
             binary_name: lar-gateway
 
           - path: ./cmd/lar-gateway
             goos: linux
             goarch: arm64
-            file_name: lar-gateway-${{ github.ref_name }}-linux-arm64
+            file_name: lar-gateway-${{ env.TAG }}-linux-arm64
             binary_name: lar-gateway
 
           - path: ./cmd/lar-gateway
             goos: linux
             goarch: arm
             goarm: 6
-            file_name: lar-gateway-${{ github.ref_name }}-linux-armv6
+            file_name: lar-gateway-${{ env.TAG }}-linux-armv6
             binary_name: lar-gateway
 
           - path: ./cmd/lar-gateway
             goos: linux
             goarch: arm
             goarm: 7
-            file_name: lar-gateway-${{ github.ref_name }}-linux-armv7
+            file_name: lar-gateway-${{ env.TAG }}-linux-armv7
             binary_name: lar-gateway
 
     steps:
@@ -107,7 +117,7 @@ jobs:
             go build \
               -trimpath \
               -o "${{ matrix.binary_name }}" \
-              -ldflags="-X github.com/eevandeya/lar/internal/version.Version=${{ github.ref_name }}" \
+              -ldflags="-X github.com/eevandeya/lar/internal/version.Version=${{ env.TAG }}" \
               "${{ matrix.path }}"
         env:
           GOOS: ${{ matrix.goos }}
@@ -153,8 +163,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-            if gh release view "${{ github.ref_name }}" > /dev/null 2>&1; then
-              gh release upload "${{ github.ref_name }}" dist/*  --clobber
+            if gh release view "${{ env.TAG }}" > /dev/null 2>&1; then
+              gh release upload "${{ env.TAG }}" dist/*  --clobber
             else
-              gh release create "${{ github.ref_name }}" dist/*
+              gh release create "${{ env.TAG }}" dist/*
             fi
