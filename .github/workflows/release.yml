@@ -103,7 +103,12 @@ jobs:
           go-version-file: go.mod
 
       - name: Build
-        run: go build -trimpath -o "${{ matrix.binary_name }}" "${{ matrix.path }}"
+        run: |
+            go build \
+              -trimpath \
+              -o "${{ matrix.binary_name }}" \
+              -ldflags="-X github.com/eevandeya/lar/internal/version.Version=${{ github.ref_name }}" \
+              "${{ matrix.path }}"
         env:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
