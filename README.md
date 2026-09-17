@@ -108,8 +108,7 @@ including ARMv6 and ARMv7, and uses minimal system resources.
 Install `lar` using the installation script:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/eevandeya/lar/master/scripts/install-client.sh | \
-    sudo bash
+curl -fsSL https://raw.githubusercontent.com/eevandeya/lar/master/scripts/install-client.sh | bash
 ```
 
 ### Lar Gateway
@@ -366,10 +365,10 @@ sudo rm /usr/local/bin/lar-gateway
 
 ```bash
 # Remove the configuration
-rm -rf ~/.config/lar
+rm -rf "${HOME}/.config/lar"
 
 # Remove the binary
-sudo rm "${HOME}/.local/bin/lar"
+rm "${HOME}/.local/bin/lar"
 ```
 
 ## Contributing
