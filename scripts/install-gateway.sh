@@ -263,8 +263,8 @@ main() {
 		printf "It cannot start until its configuration file is created.\n\n"
 		printf "Create the configuration file at:\n"
 		printf "    ${CONFIG_DIR}/config.yml\n\n"
-		printf "Then start the service with:\n"
-		printf "    sudo systemctl start ${SYSTEMD_UNIT_NAME}\n\n"
+		printf "Then enable and start the service with:\n"
+		printf "    sudo systemctl enable --now ${SYSTEMD_UNIT_NAME}\n\n"
 	fi
 }
 
