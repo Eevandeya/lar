@@ -5,8 +5,9 @@ set -euo pipefail
 BINARY_TMP=
 
 GITHUB_REPO=eevandeya/lar
-BINARY_DIR="$HOME/.local/bin"
+BINARY_DIR="${HOME}/.local/bin"
 BINARY_NAME=lar
+CONFIG_DIR="${HOME}/.config/lar"
 
 RED=$'\033[0;31m'
 GREEN=$'\033[0;32m'
@@ -65,6 +66,11 @@ check_dependencies() {
 			exit 1
 		fi
 	done
+}
+
+create_config_dir() {
+	info "creating configuration directory"
+	mkdir -p "$CONFIG_DIR"
 }
 
 get_latest_version() {
@@ -144,6 +150,7 @@ main() {
 	check_os
 	check_architecture
 	check_dependencies
+	create_config_dir
 	get_latest_version
 	download_binary
 	install_binary
