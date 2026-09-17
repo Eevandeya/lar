@@ -113,21 +113,21 @@ check_dependencies() {
 	done
 }
 
-create_config_dir() {
-	info "creating configuration directory"
-	mkdir -p "$CONFIG_DIR"
-
-	if [ "$NO_SERVICE" = "false" ]; then
-		chown "$LAR_USER:$LAR_USER" "$CONFIG_DIR"
-	fi
-}
-
 create_user() {
 	if id "$LAR_USER" >/dev/null 2>&1; then
 		info "user ${LAR_USER} already exists, using it for lar-gateway"
 	else
 		info "creating user $LAR_USER"
 		useradd --system --shell /usr/sbin/nologin "$LAR_USER"
+	fi
+}
+
+create_config_dir() {
+	info "creating configuration directory"
+	mkdir -p "$CONFIG_DIR"
+
+	if [ "$NO_SERVICE" = "false" ]; then
+		chown "$LAR_USER:$LAR_USER" "$CONFIG_DIR"
 	fi
 }
 
@@ -249,8 +249,8 @@ main() {
 		check_architecture
 		check_dependencies curl systemctl tar useradd mktemp rm sed
 
-		create_config_dir
 		create_user
+		create_config_dir
 		get_latest_version
 		download_binary
 		install_binary
