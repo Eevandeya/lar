@@ -23,7 +23,7 @@ const (
 func main() {
 	showVersion := flag.Bool("version", false, "version for lar-gateway")
 	useHTTP := flag.Bool("insecure", false, "allow the server to run without TLS using unencrypted HTTP.")
-	configPath := flag.String("config", "/etc/lar/config.yaml", "path to config file")
+	configPath := flag.String("config", "/etc/lar-gateway/config.yml", "path to config file")
 	debug := flag.Bool("debug", false, "enable debug output")
 	flag.Parse()
 
