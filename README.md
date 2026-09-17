@@ -369,7 +369,7 @@ sudo rm /usr/local/bin/lar-gateway
 rm -rf ~/.config/lar
 
 # Remove the binary
-sudo rm /usr/local/bin/lar
+sudo rm "${HOME}/.local/bin/lar"
 ```
 
 ## Contributing
