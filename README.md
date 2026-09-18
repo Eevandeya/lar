@@ -82,7 +82,7 @@ including ARMv6 and ARMv7, and uses minimal system resources.
 5. Install `lar` on your client machine.
 
    ```bash
-   curl -fsSL https://raw.githubusercontent.com/eevandeya/lar/master/scripts/install-client.sh | sudo bash
+   curl -fsSL https://raw.githubusercontent.com/eevandeya/lar/master/scripts/install-client.sh | bash
    ```
 
 6. Create a `lar` configuration file at `~/.config/lar/config.yml` and add your Gateway details to it.
