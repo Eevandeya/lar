@@ -4,7 +4,7 @@
 [![Release](https://img.shields.io/github/v/release/eevandeya/lar)](https://github.com/eevandeya/lar/releases)
 [![License](https://img.shields.io/github/license/eevandeya/lar)](LICENSE)
 
-A simple client and gateway for waking up, checking the status of, and shutting down remote machines.
+A simple client and gateway for waking up, checking whether remote machines are on, and shutting them down.
 
 ## What is Lar?
 
